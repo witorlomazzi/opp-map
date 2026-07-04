@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Geocode_Cache_Timestamp__c</fullName>
+    <label>Geocode Cache Timestamp</label>
+    <type>DateTime</type>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <description>Last geocoding attempt for this account. Prevents re-geocoding on every run (90-day cache).</description>
+</CustomField>

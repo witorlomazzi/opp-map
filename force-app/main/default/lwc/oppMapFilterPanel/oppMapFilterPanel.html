@@ -1,0 +1,53 @@
+<template>
+    <div class="slds-p-around_small">
+        <template lwc:if={error}>
+            <div class="slds-text-color_error" role="alert">{error}</div>
+        </template>
+
+        <lightning-input type="date" label="Fechamento de" name="closeDateFrom"
+            value={closeDateFrom} onchange={handleInput}></lightning-input>
+        <lightning-input type="date" label="Fechamento até" name="closeDateTo"
+            value={closeDateTo} onchange={handleInput}></lightning-input>
+
+        <lightning-input type="number" label="Valor mínimo" name="minAmount"
+            formatter="currency" value={minAmount} onchange={handleInput}></lightning-input>
+        <lightning-input type="number" label="Valor máximo" name="maxAmount"
+            formatter="currency" value={maxAmount} onchange={handleInput}></lightning-input>
+
+        <lightning-combobox label="Situação" name="wonLost" value={wonLost}
+            options={wonLostOptions} onchange={handleInput}></lightning-combobox>
+
+        <lightning-dual-listbox label="Estágios" name="stages" options={stages}
+            value={selectedStages} size="4" onchange={handleInput}></lightning-dual-listbox>
+
+        <template lwc:if={hasRecordTypes}>
+            <lightning-dual-listbox label="Tipos de registro" name="recordTypes"
+                options={recordTypes} value={selectedRecordTypes} size="3"
+                onchange={handleInput}></lightning-dual-listbox>
+        </template>
+
+        <template lwc:if={hasProducts}>
+            <lightning-dual-listbox label="Produtos" name="products" options={products}
+                value={selectedProducts} size="4" onchange={handleInput}></lightning-dual-listbox>
+        </template>
+
+        <lightning-input type="number" label="Idade mínima do ciclo (dias)" name="minCycleAgeDays"
+            value={minCycleAgeDays} onchange={handleInput}></lightning-input>
+        <lightning-input type="number" label="Idade máxima do ciclo (dias)" name="maxCycleAgeDays"
+            value={maxCycleAgeDays} onchange={handleInput}></lightning-input>
+
+        <template for:each={multipicklistFilters} for:item="filter">
+            <div key={filter.apiName} class="slds-m-top_small multipicklist-filter">
+                <lightning-dual-listbox label={filter.label} data-field={filter.apiName}
+                    options={filter.options} value={filter.selected} size="4"
+                    onchange={handleMultipicklistChange}></lightning-dual-listbox>
+                <lightning-radio-group label="Modo" data-field={filter.apiName}
+                    options={modeOptions} value={filter.mode} type="button"
+                    onchange={handleModeChange}></lightning-radio-group>
+            </div>
+        </template>
+
+        <lightning-button class="slds-m-top_small" label="Limpar filtros"
+            onclick={handleClear}></lightning-button>
+    </div>
+</template>

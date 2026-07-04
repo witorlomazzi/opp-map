@@ -1,0 +1,38 @@
+<template>
+    <div class="slds-p-bottom_x-small">
+        <lightning-button-group>
+            <lightning-button label={toggleLabel} onclick={handleToggleHeatmap}></lightning-button>
+            <lightning-button label="Filtrar pela área visível" onclick={handleFilterByView}></lightning-button>
+            <lightning-button label="Limpar área" onclick={handleClearBounds}></lightning-button>
+            <lightning-button label={tableToggleLabel} onclick={handleToggleTable}></lightning-button>
+        </lightning-button-group>
+    </div>
+
+    <div class="map-root" role="application" aria-label="Mapa de oportunidades"></div>
+
+    <template lwc:if={showTable}>
+        <table class="slds-table slds-table_bordered slds-m-top_small" aria-label="Oportunidades no mapa">
+            <thead>
+                <tr>
+                    <th scope="col">Conta</th>
+                    <th scope="col">Oportunidade</th>
+                    <th scope="col">Valor</th>
+                    <th scope="col">Estágio</th>
+                    <th scope="col">Produto</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template for:each={markers} for:item="m">
+                    <tr key={m.oppId}>
+                        <td>{m.accountName}</td>
+                        <td>{m.name}</td>
+                        <td><lightning-formatted-number value={m.amount} format-style="currency"></lightning-formatted-number></td>
+                        <td>{m.stageName}</td>
+                        <td>{m.mainProduct}</td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </template>
+
+</template>

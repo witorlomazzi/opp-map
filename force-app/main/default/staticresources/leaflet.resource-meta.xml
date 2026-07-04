@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<StaticResource xmlns="http://soap.sforce.com/2006/04/metadata">
+    <cacheControl>Public</cacheControl>
+    <contentType>application/zip</contentType>
+    <description>Leaflet 1.9.4 + Leaflet.markercluster 1.5.3 + leaflet-heat 0.2.0 (BSD/MIT licenses).</description>
+</StaticResource>

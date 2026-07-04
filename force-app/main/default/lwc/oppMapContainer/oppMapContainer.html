@@ -1,0 +1,36 @@
+<template>
+    <lightning-card title="Mapa de Oportunidades" icon-name="standard:location">
+        <div slot="actions">
+            <lightning-button-group>
+                <lightning-button label="Exportar CSV" onclick={handleExportCsv}
+                    disabled={loading}></lightning-button>
+                <lightning-button label="Geocodificar contas pendentes"
+                    onclick={handleRequestGeocoding}></lightning-button>
+            </lightning-button-group>
+        </div>
+
+        <div class="slds-grid slds-wrap slds-p-around_small">
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-large-size_3-of-12">
+                <c-opp-map-filter-panel onfilterchange={handleFilterChange}></c-opp-map-filter-panel>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12 slds-large-size_9-of-12 slds-p-left_small">
+                <template lwc:if={error}>
+                    <div class="slds-text-color_error slds-p-vertical_x-small" role="alert">{error}</div>
+                </template>
+                <template lwc:if={truncated}>
+                    <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-bottom_x-small" role="alert">
+                        Mostrando apenas os primeiros {markerCount} registros — refine seus filtros.
+                    </div>
+                </template>
+                <template lwc:if={geocodeMessage}>
+                    <div class="slds-text-body_small slds-p-vertical_x-small">{geocodeMessage}</div>
+                </template>
+                <template lwc:if={loading}>
+                    <lightning-spinner alternative-text="Carregando" size="small"></lightning-spinner>
+                </template>
+                <c-opp-map markers={markers} onboundsfilter={handleBoundsFilter}></c-opp-map>
+                <p class="slds-text-body_small slds-p-top_x-small">{markerCount} oportunidade(s) no mapa</p>
+            </div>
+        </div>
+    </lightning-card>
+</template>

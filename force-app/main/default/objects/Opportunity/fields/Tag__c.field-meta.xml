@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Tag__c</fullName>
+    <label>Tag</label>
+    <type>MultiselectPicklist</type>
+    <visibleLines>4</visibleLines>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <description>Example custom multipicklist automatically discovered by the map's dynamic filter engine.</description>
+    <valueSet>
+        <restricted>false</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Estrategica</fullName>
+                <default>false</default>
+                <label>Estratégica</label>
+            </value>
+            <value>
+                <fullName>Renovacao</fullName>
+                <default>false</default>
+                <label>Renovação</label>
+            </value>
+            <value>
+                <fullName>Upsell</fullName>
+                <default>false</default>
+                <label>Upsell</label>
+            </value>
+            <value>
+                <fullName>Parceiro</fullName>
+                <default>false</default>
+                <label>Parceiro</label>
+            </value>
+            <value>
+                <fullName>Urgente</fullName>
+                <default>false</default>
+                <label>Urgente</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

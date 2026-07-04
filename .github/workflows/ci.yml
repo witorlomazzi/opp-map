@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  jest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install --legacy-peer-deps
+      - run: npm run test:unit
+
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Salesforce CLI
+        run: npm install -g @salesforce/cli
+
+      - name: Authenticate org
+        # Requires the SFDX_AUTH_URL secret (sf org display --verbose > auth url)
+        run: |
+          echo "${{ secrets.SFDX_AUTH_URL }}" > auth-url.txt
+          sf org login sfdx-url --sfdx-url-file auth-url.txt --alias ci-org --set-default
+          rm auth-url.txt
+
+      - name: Validate deploy and run local tests
+        run: sf project deploy validate --source-dir force-app --test-level RunLocalTests --target-org ci-org
