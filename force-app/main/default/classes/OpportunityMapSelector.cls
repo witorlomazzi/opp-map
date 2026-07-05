@@ -10,7 +10,10 @@
  *  - the final query runs WITH USER_MODE, so CRUD/FLS is enforced end to end
  */
 public with sharing class OpportunityMapSelector {
-    public static final Integer DEFAULT_LIMIT = 500;
+    // 10,000 rows costs ~1 SOQL query and stays well inside the 50,000
+    // query-row governor limit for synchronous Apex; the LWC clusters
+    // markers with chunked loading so the browser doesn't block either.
+    public static final Integer DEFAULT_LIMIT = 10000;
 
     public class MapResult {
         @AuraEnabled public List<Marker> markers;

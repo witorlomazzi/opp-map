@@ -105,7 +105,7 @@ sf apex run test --tests OpportunityMapSelectorTest --tests OppMapControllerAndD
 
 ## Performance
 
-- Limite de 500 marcadores por consulta (com aviso "refine seus filtros" + flag `truncated`).
+- Limite de 10.000 marcadores por consulta (com aviso "refine seus filtros" + flag `truncated`); clustering com `chunkedLoading` no Leaflet para não travar o navegador ao inserir milhares de marcadores de uma vez. Testado com ~1.700 oportunidades geolocalizadas via carga em massa (Bulk API): consulta única, 70-200ms.
 - Cache client-side por combinação de filtros na sessão (repetir um filtro não refaz a query).
 - Clustering de marcadores (Leaflet.markercluster) para alta densidade.
 - Debounce de 400 ms no painel — nada de query por clique.

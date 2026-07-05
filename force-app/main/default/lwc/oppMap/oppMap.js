@@ -134,16 +134,22 @@ export default class OppMap extends LightningElement {
             this._heatLayer.addTo(this._map);
             return;
         }
+        // chunkedLoading spreads the initial clustering work across animation
+        // frames instead of doing it all synchronously, so adding thousands
+        // of markers doesn't freeze the tab.
         // eslint-disable-next-line no-undef
-        this._clusterLayer = L.markerClusterGroup();
+        this._clusterLayer = L.markerClusterGroup({ chunkedLoading: true, chunkDelay: 30 });
         this._markersByOppId = new Map();
-        this._markers.forEach((m) => {
+        const leafletMarkers = this._markers.map((m) => {
             // eslint-disable-next-line no-undef
             const marker = L.marker([m.latitude, m.longitude], { icon: this._defaultIcon });
-            marker.bindPopup(this.buildPopup(m));
-            this._clusterLayer.addLayer(marker);
+            marker.bindPopup(() => this.buildPopup(m));
             this._markersByOppId.set(m.oppId, marker);
+            return marker;
         });
+        // addLayers() bulk-inserts in one pass; looping addLayer() per marker
+        // is dramatically slower once there are thousands of them.
+        this._clusterLayer.addLayers(leafletMarkers);
         this._map.addLayer(this._clusterLayer);
     }
 
