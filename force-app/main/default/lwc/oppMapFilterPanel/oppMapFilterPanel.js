@@ -28,12 +28,8 @@ export default class OppMapFilterPanel extends LightningElement {
 
     _debounceTimer;
 
-    wonLostOptions = [
-        { label: 'Todas', value: '' },
-        { label: 'Ganhas', value: 'won' },
-        { label: 'Perdidas', value: 'lost' },
-        { label: 'Abertas', value: 'open' }
-    ];
+    activeSections = ['closeDate'];
+    wonLostOptions = this.buildWonLostOptions('');
 
     modeOptions = [
         { label: 'Contém qualquer', value: 'any' },
@@ -67,6 +63,28 @@ export default class OppMapFilterPanel extends LightningElement {
         return this.products.length > 0;
     }
 
+    buildWonLostOptions(current) {
+        return [
+            { label: 'Todas', value: '' },
+            { label: 'Ganhas', value: 'won' },
+            { label: 'Perdidas', value: 'lost' },
+            { label: 'Abertas', value: 'open' }
+        ].map((opt) => ({
+            ...opt,
+            chipClass: opt.value === current ? 'op-chip is-selected' : 'op-chip'
+        }));
+    }
+
+    handleSectionToggle(event) {
+        this.activeSections = event.detail.openSections;
+    }
+
+    handleWonLostChip(event) {
+        this.wonLost = event.target.dataset.value;
+        this.wonLostOptions = this.buildWonLostOptions(this.wonLost);
+        this.emitDebounced();
+    }
+
     handleInput(event) {
         const { name } = event.target;
         const value = event.detail.value;
@@ -78,7 +96,6 @@ export default class OppMapFilterPanel extends LightningElement {
             case 'stages': this.selectedStages = value; break;
             case 'recordTypes': this.selectedRecordTypes = value; break;
             case 'products': this.selectedProducts = value; break;
-            case 'wonLost': this.wonLost = value; break;
             case 'minCycleAgeDays': this.minCycleAgeDays = value ? Number(value) : null; break;
             case 'maxCycleAgeDays': this.maxCycleAgeDays = value ? Number(value) : null; break;
             default: break;
@@ -113,6 +130,7 @@ export default class OppMapFilterPanel extends LightningElement {
         this.selectedRecordTypes = [];
         this.selectedProducts = [];
         this.wonLost = '';
+        this.wonLostOptions = this.buildWonLostOptions('');
         this.minCycleAgeDays = null;
         this.maxCycleAgeDays = null;
         this.multipicklistFilters = this.multipicklistFilters.map((f) => ({

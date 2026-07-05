@@ -4,123 +4,77 @@
             <div class="op-filter-error" role="alert">{error}</div>
         </template>
 
-        <div class="op-filter-section">
-            <div class="op-filter-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-                    <path d="M16 2v4M8 2v4M3 10h18"></path>
-                </svg>
-                Fechamento
-            </div>
-            <div class="op-field-row">
-                <lightning-input type="date" variant="label-hidden" label="Fechamento de" name="closeDateFrom"
-                    value={closeDateFrom} onchange={handleInput}></lightning-input>
-                <lightning-input type="date" variant="label-hidden" label="Fechamento até" name="closeDateTo"
-                    value={closeDateTo} onchange={handleInput}></lightning-input>
-            </div>
-        </div>
-
-        <div class="op-filter-section">
-            <div class="op-filter-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                </svg>
-                Valor
-            </div>
-            <div class="op-field-row">
-                <lightning-input type="number" variant="label-hidden" label="Valor mínimo" name="minAmount"
-                    placeholder="Mínimo" formatter="currency" value={minAmount} onchange={handleInput}></lightning-input>
-                <lightning-input type="number" variant="label-hidden" label="Valor máximo" name="maxAmount"
-                    placeholder="Máximo" formatter="currency" value={maxAmount} onchange={handleInput}></lightning-input>
-            </div>
-        </div>
-
-        <div class="op-filter-section">
-            <div class="op-filter-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="9"></circle>
-                    <path d="M9 12l2 2 4-4"></path>
-                </svg>
-                Situação
-            </div>
-            <lightning-combobox variant="label-hidden" label="Situação" name="wonLost" value={wonLost}
-                options={wonLostOptions} onchange={handleInput}></lightning-combobox>
-        </div>
-
-        <div class="op-filter-section">
-            <div class="op-filter-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 6h18M6 6v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6"></path>
-                </svg>
-                Estágios
-            </div>
-            <lightning-dual-listbox variant="label-hidden" label="Estágios" name="stages" options={stages}
-                value={selectedStages} size="4" onchange={handleInput}></lightning-dual-listbox>
-        </div>
-
-        <template lwc:if={hasRecordTypes}>
-            <div class="op-filter-section">
-                <div class="op-filter-label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 4h16v16H4z"></path>
-                    </svg>
-                    Tipos de registro
+        <lightning-accordion allow-multiple-sections-open active-section-name={activeSections}
+            onsectiontoggle={handleSectionToggle} class="op-accordion">
+            <lightning-accordion-section name="closeDate" label="Fechamento">
+                <div class="op-field-row">
+                    <lightning-input type="date" variant="label-hidden" label="Fechamento de" name="closeDateFrom"
+                        value={closeDateFrom} onchange={handleInput}></lightning-input>
+                    <lightning-input type="date" variant="label-hidden" label="Fechamento até" name="closeDateTo"
+                        value={closeDateTo} onchange={handleInput}></lightning-input>
                 </div>
-                <lightning-dual-listbox variant="label-hidden" label="Tipos de registro" name="recordTypes"
-                    options={recordTypes} value={selectedRecordTypes} size="3"
-                    onchange={handleInput}></lightning-dual-listbox>
-            </div>
-        </template>
+            </lightning-accordion-section>
 
-        <template lwc:if={hasProducts}>
-            <div class="op-filter-section">
-                <div class="op-filter-label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20.59 13.41 12 22l-9-9V4a1 1 0 0 1 1-1h9l8.59 8.59a2 2 0 0 1 0 2.82Z"></path>
-                        <circle cx="7.5" cy="7.5" r="1.5"></circle>
-                    </svg>
-                    Produtos
+            <lightning-accordion-section name="amount" label="Valor">
+                <div class="op-field-row">
+                    <lightning-input type="number" variant="label-hidden" label="Valor mínimo" name="minAmount"
+                        placeholder="Mínimo" formatter="currency" value={minAmount} onchange={handleInput}></lightning-input>
+                    <lightning-input type="number" variant="label-hidden" label="Valor máximo" name="maxAmount"
+                        placeholder="Máximo" formatter="currency" value={maxAmount} onchange={handleInput}></lightning-input>
                 </div>
-                <lightning-dual-listbox variant="label-hidden" label="Produtos" name="products" options={products}
-                    value={selectedProducts} size="4" onchange={handleInput}></lightning-dual-listbox>
-            </div>
-        </template>
+            </lightning-accordion-section>
 
-        <div class="op-filter-section">
-            <div class="op-filter-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="9"></circle>
-                    <path d="M12 7v5l3 3"></path>
-                </svg>
-                Idade do ciclo (dias)
-            </div>
-            <div class="op-field-row">
-                <lightning-input type="number" variant="label-hidden" label="Idade mínima do ciclo (dias)"
-                    placeholder="Mínima" name="minCycleAgeDays"
-                    value={minCycleAgeDays} onchange={handleInput}></lightning-input>
-                <lightning-input type="number" variant="label-hidden" label="Idade máxima do ciclo (dias)"
-                    placeholder="Máxima" name="maxCycleAgeDays"
-                    value={maxCycleAgeDays} onchange={handleInput}></lightning-input>
-            </div>
-        </div>
-
-        <template for:each={multipicklistFilters} for:item="filter">
-            <div key={filter.apiName} class="op-filter-section">
-                <div class="op-filter-label">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20.59 13.41 12 22l-9-9V4a1 1 0 0 1 1-1h9l8.59 8.59a2 2 0 0 1 0 2.82Z"></path>
-                        <circle cx="7.5" cy="7.5" r="1.5"></circle>
-                    </svg>
-                    {filter.label}
+            <lightning-accordion-section name="status" label="Situação">
+                <div class="op-chip-group">
+                    <template for:each={wonLostOptions} for:item="opt">
+                        <button key={opt.value} type="button" class={opt.chipClass} data-value={opt.value}
+                            onclick={handleWonLostChip}>{opt.label}</button>
+                    </template>
                 </div>
-                <lightning-dual-listbox variant="label-hidden" label={filter.label} data-field={filter.apiName}
-                    options={filter.options} value={filter.selected} size="4"
-                    onchange={handleMultipicklistChange}></lightning-dual-listbox>
-                <lightning-radio-group class="op-mode-toggle" variant="label-hidden" label="Modo" data-field={filter.apiName}
-                    options={modeOptions} value={filter.mode} type="button"
-                    onchange={handleModeChange}></lightning-radio-group>
-            </div>
-        </template>
+            </lightning-accordion-section>
+
+            <lightning-accordion-section name="stages" label="Estágios">
+                <lightning-dual-listbox variant="label-hidden" label="Estágios" name="stages" options={stages}
+                    value={selectedStages} size="4" onchange={handleInput}></lightning-dual-listbox>
+            </lightning-accordion-section>
+
+            <template lwc:if={hasRecordTypes}>
+                <lightning-accordion-section name="recordTypes" label="Tipos de registro">
+                    <lightning-dual-listbox variant="label-hidden" label="Tipos de registro" name="recordTypes"
+                        options={recordTypes} value={selectedRecordTypes} size="3"
+                        onchange={handleInput}></lightning-dual-listbox>
+                </lightning-accordion-section>
+            </template>
+
+            <template lwc:if={hasProducts}>
+                <lightning-accordion-section name="products" label="Produtos">
+                    <lightning-dual-listbox variant="label-hidden" label="Produtos" name="products" options={products}
+                        value={selectedProducts} size="4" onchange={handleInput}></lightning-dual-listbox>
+                </lightning-accordion-section>
+            </template>
+
+            <lightning-accordion-section name="cycleAge" label="Idade do ciclo (dias)">
+                <div class="op-field-row">
+                    <lightning-input type="number" variant="label-hidden" label="Idade mínima do ciclo (dias)"
+                        placeholder="Mínima" name="minCycleAgeDays"
+                        value={minCycleAgeDays} onchange={handleInput}></lightning-input>
+                    <lightning-input type="number" variant="label-hidden" label="Idade máxima do ciclo (dias)"
+                        placeholder="Máxima" name="maxCycleAgeDays"
+                        value={maxCycleAgeDays} onchange={handleInput}></lightning-input>
+                </div>
+            </lightning-accordion-section>
+
+            <template for:each={multipicklistFilters} for:item="filter">
+                <lightning-accordion-section key={filter.apiName} name={filter.apiName} label={filter.label}>
+                    <lightning-dual-listbox variant="label-hidden" label={filter.label} data-field={filter.apiName}
+                        options={filter.options} value={filter.selected} size="4"
+                        onchange={handleMultipicklistChange}></lightning-dual-listbox>
+                    <lightning-radio-group class="op-mode-toggle" variant="label-hidden" label="Modo"
+                        data-field={filter.apiName} options={modeOptions} value={filter.mode} type="button"
+                        onchange={handleModeChange}></lightning-radio-group>
+                </lightning-accordion-section>
+            </template>
+        </lightning-accordion>
 
         <button class="op-clear-btn" onclick={handleClear}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
