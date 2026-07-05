@@ -2,6 +2,16 @@ import { LightningElement } from 'lwc';
 import getOpportunities from '@salesforce/apex/OpportunityMapController.getOpportunities';
 import requestGeocoding from '@salesforce/apex/OpportunityMapController.requestGeocoding';
 
+const TABLE_LABEL_MAX_LENGTH = 15;
+const TABLE_LABEL_CUT_AT = 12;
+
+function truncateLabel(value) {
+    if (!value || value.length <= TABLE_LABEL_MAX_LENGTH) {
+        return value;
+    }
+    return value.slice(0, TABLE_LABEL_CUT_AT) + '...';
+}
+
 /**
  * Orchestrator: holds filter state, calls Apex, caches results per filter
  * combination for the session, exports CSV and surfaces truncation warnings.
@@ -128,6 +138,19 @@ export default class OppMapContainer extends LightningElement {
         link.download = 'oportunidades-mapa.csv';
         link.click();
         URL.revokeObjectURL(link.href);
+    }
+
+    get tableRows() {
+        return this.markers.map((m) => ({
+            oppId: m.oppId,
+            accountName: truncateLabel(m.accountName),
+            accountNameFull: m.accountName,
+            name: truncateLabel(m.name),
+            nameFull: m.name,
+            amount: m.amount,
+            stageName: m.stageName,
+            mainProduct: m.mainProduct
+        }));
     }
 
     get markerCount() {

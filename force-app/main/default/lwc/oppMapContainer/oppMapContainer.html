@@ -71,11 +71,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <template for:each={markers} for:item="m">
+                            <template for:each={tableRows} for:item="m">
                                 <tr key={m.oppId} data-opp-id={m.oppId} tabindex="0"
                                     onclick={handleRowClick} onkeydown={handleRowKeydown}>
-                                    <td>{m.accountName}</td>
-                                    <td>{m.name}</td>
+                                    <td title={m.accountNameFull}>{m.accountName}</td>
+                                    <td title={m.nameFull}>{m.name}</td>
                                     <td><lightning-formatted-number value={m.amount} format-style="currency"></lightning-formatted-number></td>
                                     <td>{m.stageName}</td>
                                     <td>{m.mainProduct}</td>
