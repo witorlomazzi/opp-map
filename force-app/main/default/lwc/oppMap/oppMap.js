@@ -6,19 +6,20 @@ import OPP_MAP_THEME from '@salesforce/resourceUrl/oppMapTheme';
 const MAX_POPUP_TAGS = 6;
 
 /**
- * Presentational map: receives markers, renders Leaflet with clustering, a
- * heatmap toggle and a screen-reader-friendly table alternative. Emits
- * 'boundsfilter' when the user asks to filter by the current viewport.
+ * Presentational map: receives markers and renders Leaflet with clustering
+ * and a heatmap toggle. Emits 'boundsfilter' when the user asks to filter by
+ * the current viewport. The accessible table view lives in the container,
+ * not here, so it can share the sidebar's tabbed layout.
  */
 export default class OppMap extends LightningElement {
     _markers = [];
     leafletReady = false;
     heatmapMode = false;
-    showTable = false;
 
     _map;
     _clusterLayer;
     _heatLayer;
+    _resizeObserver;
 
     @api
     get markers() {
@@ -83,6 +84,24 @@ export default class OppMap extends LightningElement {
             maxZoom: 18,
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(this._map);
+
+        // The map card now flexes to fill the viewport height, so Leaflet's
+        // size can be wrong until layout settles (or when the window/tab
+        // resizes) unless it's told to re-measure.
+        if (typeof ResizeObserver !== 'undefined') {
+            this._resizeObserver = new ResizeObserver(() => {
+                if (this._map) {
+                    this._map.invalidateSize();
+                }
+            });
+            this._resizeObserver.observe(container);
+        }
+    }
+
+    disconnectedCallback() {
+        if (this._resizeObserver) {
+            this._resizeObserver.disconnect();
+        }
     }
 
     renderMarkers() {
@@ -149,10 +168,6 @@ export default class OppMap extends LightningElement {
         return this.heatmapMode ? 'Ver pontos' : 'Ver heatmap (ganhas)';
     }
 
-    get tableToggleLabel() {
-        return this.showTable ? 'Ocultar tabela' : 'Mostrar tabela (acessível)';
-    }
-
     get hasMarkers() {
         return this._markers.length > 0;
     }
@@ -165,17 +180,9 @@ export default class OppMap extends LightningElement {
         return this.heatmapMode ? 'op-icon-btn is-active' : 'op-icon-btn';
     }
 
-    get tableButtonClass() {
-        return this.showTable ? 'op-icon-btn is-active' : 'op-icon-btn';
-    }
-
     handleToggleHeatmap() {
         this.heatmapMode = !this.heatmapMode;
         this.renderMarkers();
-    }
-
-    handleToggleTable() {
-        this.showTable = !this.showTable;
     }
 
     handleFilterByView() {

@@ -13,12 +13,34 @@ export default class OppMapContainer extends LightningElement {
     error;
     geocodeMessage;
 
+    activeTab = 'filters';
+
     _filters = {};
     _bbox = null;
     _cache = new Map();
 
     connectedCallback() {
         this.runQuery();
+    }
+
+    get isFiltersTab() {
+        return this.activeTab === 'filters';
+    }
+
+    get isTableTab() {
+        return this.activeTab === 'table';
+    }
+
+    get filtersTabClass() {
+        return this.isFiltersTab ? 'op-tab-btn is-active' : 'op-tab-btn';
+    }
+
+    get tableTabClass() {
+        return this.isTableTab ? 'op-tab-btn is-active' : 'op-tab-btn';
+    }
+
+    handleTabClick(event) {
+        this.activeTab = event.currentTarget.dataset.tab;
     }
 
     handleFilterChange(event) {

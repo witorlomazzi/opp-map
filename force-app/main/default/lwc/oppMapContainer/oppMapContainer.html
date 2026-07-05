@@ -37,7 +37,54 @@
             </div>
         </div>
 
-        <c-opp-map-filter-panel class="op-filter-slot" onfilterchange={handleFilterChange}></c-opp-map-filter-panel>
+        <div class="op-sidebar">
+            <div class="op-tab-bar">
+                <button class={filtersTabClass} data-tab="filters" onclick={handleTabClick}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 6h16M7 12h10M10 18h4"></path>
+                    </svg>
+                    Filtros
+                </button>
+                <button class={tableTabClass} data-tab="table" onclick={handleTabClick}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                        <path d="M3 10h18M9 10v10"></path>
+                    </svg>
+                    Tabela
+                    <span class="op-tab-count">{markerCount}</span>
+                </button>
+            </div>
+
+            <div class="op-tab-content">
+                <template lwc:if={isFiltersTab}>
+                    <c-opp-map-filter-panel onfilterchange={handleFilterChange}></c-opp-map-filter-panel>
+                </template>
+                <template lwc:if={isTableTab}>
+                    <table class="op-table" aria-label="Oportunidades no mapa">
+                        <thead>
+                            <tr>
+                                <th scope="col">Conta</th>
+                                <th scope="col">Oportunidade</th>
+                                <th scope="col">Valor</th>
+                                <th scope="col">Estágio</th>
+                                <th scope="col">Produto</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={markers} for:item="m">
+                                <tr key={m.oppId}>
+                                    <td>{m.accountName}</td>
+                                    <td>{m.name}</td>
+                                    <td><lightning-formatted-number value={m.amount} format-style="currency"></lightning-formatted-number></td>
+                                    <td>{m.stageName}</td>
+                                    <td>{m.mainProduct}</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </template>
+            </div>
+        </div>
 
         <div class="op-map-card">
             <template lwc:if={error}>

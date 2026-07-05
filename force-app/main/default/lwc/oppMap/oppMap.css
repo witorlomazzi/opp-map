@@ -1,10 +1,14 @@
 :host {
     position: relative;
-    display: block;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
 }
 
 .map-root {
-    height: 560px;
+    flex: 1;
+    min-height: 0;
     width: 100%;
     background: #e9ecf3;
 }
@@ -75,34 +79,4 @@
 .op-empty-state p {
     margin: 0;
     font-size: 13.5px;
-}
-
-.op-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-}
-
-.op-table thead th {
-    text-align: left;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--op-text-muted, #6b7280);
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--op-border, #e6e8f0);
-    background: #fafafd;
-}
-
-.op-table tbody td {
-    padding: 10px 20px;
-    border-bottom: 1px solid var(--op-border, #e6e8f0);
-}
-
-.op-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.op-table tbody tr:hover {
-    background: #fafafd;
 }
