@@ -291,9 +291,13 @@
 }
 
 .op-map-card c-opp-map {
+    /* No "display" here on purpose: oppMap's own :host sets display:flex so
+       its internal map-root can flex to fill the height below. Setting
+       display here too would win on specificity and silently override that,
+       collapsing the map to zero height. flex/min-height only affect how
+       much space THIS element gets from ITS OWN parent's flex layout. */
     flex: 1;
     min-height: 0;
-    display: block;
 }
 
 .op-banner {
