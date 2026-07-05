@@ -24,6 +24,7 @@ export default class OppMapContainer extends LightningElement {
     geocodeMessage;
 
     activeTab = 'filters';
+    tableSearchTerm = '';
 
     _filters = {};
     _bbox = null;
@@ -51,6 +52,10 @@ export default class OppMapContainer extends LightningElement {
 
     handleTabClick(event) {
         this.activeTab = event.currentTarget.dataset.tab;
+    }
+
+    handleTableSearch(event) {
+        this.tableSearchTerm = event.target.value;
     }
 
     handleRowClick(event) {
@@ -141,7 +146,12 @@ export default class OppMapContainer extends LightningElement {
     }
 
     get tableRows() {
-        return this.markers.map((m) => ({
+        const term = this.tableSearchTerm.trim().toLowerCase();
+        const filtered = term
+            ? this.markers.filter((m) => [m.accountName, m.name, m.stageName, m.mainProduct]
+                .some((v) => v && v.toLowerCase().includes(term)))
+            : this.markers;
+        return filtered.map((m) => ({
             oppId: m.oppId,
             accountName: truncateLabel(m.accountName),
             accountNameFull: m.accountName,
@@ -151,6 +161,10 @@ export default class OppMapContainer extends LightningElement {
             stageName: m.stageName,
             mainProduct: m.mainProduct
         }));
+    }
+
+    get hasNoTableMatches() {
+        return this.tableSearchTerm.trim().length > 0 && this.tableRows.length === 0;
     }
 
     get markerCount() {

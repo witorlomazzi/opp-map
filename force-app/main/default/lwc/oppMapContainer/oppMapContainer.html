@@ -60,6 +60,14 @@
                     <c-opp-map-filter-panel onfilterchange={handleFilterChange}></c-opp-map-filter-panel>
                 </template>
                 <template lwc:if={isTableTab}>
+                    <div class="op-table-search">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="7"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </svg>
+                        <input type="search" placeholder="Buscar por conta, oportunidade, estágio ou produto..."
+                            value={tableSearchTerm} oninput={handleTableSearch} />
+                    </div>
                     <table class="op-table" aria-label="Oportunidades no mapa">
                         <thead>
                             <tr>
@@ -83,6 +91,9 @@
                             </template>
                         </tbody>
                     </table>
+                    <template lwc:if={hasNoTableMatches}>
+                        <p class="op-table-empty">Nenhum resultado para "{tableSearchTerm}".</p>
+                    </template>
                 </template>
             </div>
         </div>

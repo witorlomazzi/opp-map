@@ -233,6 +233,46 @@
     overflow-y: auto;
 }
 
+.op-table-search {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--op-surface);
+    border-bottom: 1px solid var(--op-border);
+}
+
+.op-table-search svg {
+    width: 15px;
+    height: 15px;
+    color: var(--op-text-muted);
+    flex-shrink: 0;
+}
+
+.op-table-search input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    font-family: inherit;
+    background: transparent;
+    color: var(--op-text);
+}
+
+.op-table-search input::placeholder {
+    color: var(--op-text-muted);
+}
+
+.op-table-empty {
+    padding: 20px 16px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--op-text-muted);
+}
+
 .op-table {
     width: 100%;
     border-collapse: collapse;

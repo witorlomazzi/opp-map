@@ -16,6 +16,14 @@
     box-shadow: none !important;
 }
 
+/* Leaflet's div-icon default gives every icon a white box + border; our pin
+   is a transparent inline SVG so that chrome needs to be stripped. */
+.op-marker-pin {
+    background: transparent !important;
+    border: none !important;
+    filter: drop-shadow(0 2px 3px rgba(16, 24, 40, 0.35));
+}
+
 .op-popup-account {
     font-size: 14px;
     font-weight: 700;

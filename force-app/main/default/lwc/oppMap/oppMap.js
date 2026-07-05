@@ -63,24 +63,22 @@ export default class OppMap extends LightningElement {
     }
 
     buildDefaultIcon() {
-        // L.Marker's shared default icon is instantiated the moment leaflet.js
-        // is parsed (Marker.prototype.options.icon = new IconDefault()),
-        // using whatever icon URLs Leaflet auto-detected from its own <script>
-        // tag at that instant. Lightning's sandboxing breaks that detection,
-        // and patching L.Icon.Default afterwards doesn't reach that
-        // already-built instance (it copied the options, not a live
-        // reference). Building our own icon and passing it explicitly to
-        // every marker sidesteps the whole problem.
+        // Leaflet's raster default icon (marker-icon.png) depends on an image
+        // URL resolved relative to leaflet.js's own <script> tag, which kept
+        // breaking under Lightning's sandboxing no matter how it was patched.
+        // A divIcon sidesteps the whole class of problem: it's just inline
+        // SVG/HTML, no image request to fail.
         // eslint-disable-next-line no-undef
-        this._defaultIcon = L.icon({
-            iconUrl: LEAFLET + '/images/marker-icon.png',
-            iconRetinaUrl: LEAFLET + '/images/marker-icon-2x.png',
-            shadowUrl: LEAFLET + '/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            tooltipAnchor: [16, -28],
-            shadowSize: [41, 41]
+        this._defaultIcon = L.divIcon({
+            className: 'op-marker-pin',
+            html:
+                '<svg viewBox="0 0 24 24" width="28" height="28">' +
+                '<path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8z" fill="#5b5fef"/>' +
+                '<circle cx="12" cy="10" r="3.2" fill="#ffffff"/>' +
+                '</svg>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 28],
+            popupAnchor: [0, -26]
         });
     }
 
