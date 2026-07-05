@@ -1,36 +1,81 @@
 <template>
-    <lightning-card title="Mapa de Oportunidades" icon-name="standard:location">
-        <div slot="actions">
-            <lightning-button-group>
-                <lightning-button label="Exportar CSV" onclick={handleExportCsv}
-                    disabled={loading}></lightning-button>
-                <lightning-button label="Geocodificar contas pendentes"
-                    onclick={handleRequestGeocoding}></lightning-button>
-            </lightning-button-group>
+    <div class="op-shell">
+        <div class="op-header">
+            <div class="op-header-title">
+                <div class="op-icon-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path>
+                        <circle cx="12" cy="10" r="2.5"></circle>
+                    </svg>
+                </div>
+                <div>
+                    <h1>
+                        Mapa de Oportunidades
+                        <span class="op-count-pill"><span class="op-dot"></span>{markerCount} no mapa</span>
+                    </h1>
+                    <p>Distribuição geográfica do pipeline, com filtros dinâmicos</p>
+                </div>
+            </div>
+            <div class="op-actions">
+                <button class="op-btn" onclick={handleExportCsv} disabled={loading}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v9m0 0-3.5-3.5M12 14l3.5-3.5"></path>
+                        <path d="M5 16.5V18a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1.5"></path>
+                    </svg>
+                    Exportar CSV
+                </button>
+                <button class="op-btn op-btn-primary" onclick={handleRequestGeocoding}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+                        <path d="M21 3v6h-6"></path>
+                    </svg>
+                    Geocodificar pendentes
+                </button>
+            </div>
         </div>
 
-        <div class="slds-grid slds-wrap slds-p-around_small">
-            <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12 slds-large-size_3-of-12">
-                <c-opp-map-filter-panel onfilterchange={handleFilterChange}></c-opp-map-filter-panel>
-            </div>
-            <div class="slds-col slds-size_1-of-1 slds-medium-size_8-of-12 slds-large-size_9-of-12 slds-p-left_small">
-                <template lwc:if={error}>
-                    <div class="slds-text-color_error slds-p-vertical_x-small" role="alert">{error}</div>
-                </template>
-                <template lwc:if={truncated}>
-                    <div class="slds-notify slds-notify_alert slds-alert_warning slds-m-bottom_x-small" role="alert">
-                        Mostrando apenas os primeiros {markerCount} registros — refine seus filtros.
-                    </div>
-                </template>
-                <template lwc:if={geocodeMessage}>
-                    <div class="slds-text-body_small slds-p-vertical_x-small">{geocodeMessage}</div>
-                </template>
-                <template lwc:if={loading}>
-                    <lightning-spinner alternative-text="Carregando" size="small"></lightning-spinner>
-                </template>
-                <c-opp-map markers={markers} onboundsfilter={handleBoundsFilter}></c-opp-map>
-                <p class="slds-text-body_small slds-p-top_x-small">{markerCount} oportunidade(s) no mapa</p>
+        <c-opp-map-filter-panel class="op-filter-slot" onfilterchange={handleFilterChange}></c-opp-map-filter-panel>
+
+        <div class="op-map-card">
+            <template lwc:if={error}>
+                <div class="op-banner op-banner-error" role="alert">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <path d="M12 8v5m0 3h.01"></path>
+                    </svg>
+                    {error}
+                </div>
+            </template>
+            <template lwc:elseif={truncated}>
+                <div class="op-banner" role="alert">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"></path>
+                    </svg>
+                    Mostrando apenas os primeiros {markerCount} registros — refine seus filtros.
+                </div>
+            </template>
+            <template lwc:if={geocodeMessage}>
+                <div class="op-banner op-banner-info">{geocodeMessage}</div>
+            </template>
+            <template lwc:if={loading}>
+                <div class="op-loading-overlay">
+                    <lightning-spinner alternative-text="Carregando" size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <c-opp-map markers={markers} onboundsfilter={handleBoundsFilter}></c-opp-map>
+
+            <div class="op-map-footer">
+                <span>{markerCount} oportunidade(s) no mapa</span>
+                <div class="op-legend">
+                    <div class="op-legend-item"><span class="op-legend-dot op-legend-dot-open"></span>Aberta</div>
+                    <div class="op-legend-item"><span class="op-legend-dot op-legend-dot-won"></span>Ganha</div>
+                    <div class="op-legend-item"><span class="op-legend-dot op-legend-dot-lost"></span>Perdida</div>
+                </div>
             </div>
         </div>
-    </lightning-card>
+    </div>
 </template>

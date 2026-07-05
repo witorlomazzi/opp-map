@@ -1,5 +1,108 @@
+:host {
+    position: relative;
+    display: block;
+}
+
 .map-root {
-    height: 480px;
+    height: 560px;
     width: 100%;
-    border-radius: 0.25rem;
+    background: #e9ecf3;
+}
+
+.op-map-toolbar {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.op-icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(6px);
+    border: 1px solid var(--op-border, #e6e8f0);
+    box-shadow: var(--op-shadow-sm, 0 1px 3px rgba(16, 24, 40, 0.08));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--op-text, #1d1f2b);
+    transition: all 0.12s ease;
+    padding: 0;
+}
+
+.op-icon-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.op-icon-btn:hover {
+    background: var(--op-primary, #5b5fef);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: var(--op-shadow-md, 0 8px 24px rgba(16, 24, 40, 0.12));
+}
+
+.op-icon-btn.is-active {
+    background: var(--op-primary, #5b5fef);
+    color: white;
+}
+
+.op-empty-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 500;
+    text-align: center;
+    color: var(--op-text-muted, #6b7280);
+    max-width: 260px;
+    pointer-events: none;
+}
+
+.op-empty-state svg {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 10px;
+    opacity: 0.6;
+}
+
+.op-empty-state p {
+    margin: 0;
+    font-size: 13.5px;
+}
+
+.op-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.op-table thead th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--op-text-muted, #6b7280);
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--op-border, #e6e8f0);
+    background: #fafafd;
+}
+
+.op-table tbody td {
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--op-border, #e6e8f0);
+}
+
+.op-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.op-table tbody tr:hover {
+    background: #fafafd;
 }

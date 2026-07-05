@@ -1,0 +1,102 @@
+:host {
+    display: block;
+}
+
+.op-filter-card {
+    background: var(--op-surface, #ffffff);
+    border-radius: var(--op-radius-lg, 18px);
+    box-shadow: var(--op-shadow-sm, 0 1px 3px rgba(16, 24, 40, 0.06));
+    padding: 20px;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.op-filter-error {
+    background: var(--op-danger-soft, #fdeceb);
+    color: #b42318;
+    border-radius: var(--op-radius-sm, 8px);
+    padding: 10px 12px;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.op-filter-section {
+    margin-bottom: 20px;
+}
+
+.op-filter-section:last-of-type {
+    margin-bottom: 0;
+}
+
+.op-filter-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--op-text-muted, #6b7280);
+    margin-bottom: 10px;
+}
+
+.op-filter-label svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--op-primary, #5b5fef);
+    flex-shrink: 0;
+}
+
+.op-field-row {
+    display: flex;
+    gap: 10px;
+}
+
+.op-field-row > * {
+    flex: 1;
+    min-width: 0;
+}
+
+.op-mode-toggle {
+    margin-top: 8px;
+}
+
+.op-clear-btn {
+    width: 100%;
+    margin-top: 4px;
+    padding: 10px;
+    border-radius: var(--op-radius-sm, 8px);
+    border: 1px dashed var(--op-border, #e6e8f0);
+    background: transparent;
+    color: var(--op-text-muted, #6b7280);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.12s ease;
+}
+
+.op-clear-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
+.op-clear-btn:hover {
+    border-color: var(--op-danger, #ef4444);
+    color: var(--op-danger, #ef4444);
+}
+
+/* Nudge SLDS base component styling hooks toward the rounder, softer look. */
+lightning-input,
+lightning-combobox,
+lightning-dual-listbox {
+    --slds-c-input-radius-border: 8px;
+    --slds-c-input-color-border-focus: var(--op-primary, #5b5fef);
+}
