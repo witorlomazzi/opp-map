@@ -21,6 +21,7 @@ export default class OppMap extends LightningElement {
     _heatLayer;
     _resizeObserver;
     _defaultIcon;
+    _markersByOppId = new Map();
 
     @api
     get markers() {
@@ -135,13 +136,34 @@ export default class OppMap extends LightningElement {
         }
         // eslint-disable-next-line no-undef
         this._clusterLayer = L.markerClusterGroup();
+        this._markersByOppId = new Map();
         this._markers.forEach((m) => {
             // eslint-disable-next-line no-undef
             const marker = L.marker([m.latitude, m.longitude], { icon: this._defaultIcon });
             marker.bindPopup(this.buildPopup(m));
             this._clusterLayer.addLayer(marker);
+            this._markersByOppId.set(m.oppId, marker);
         });
         this._map.addLayer(this._clusterLayer);
+    }
+
+    /** Centers the map on a marker (zooming out of its cluster if needed) and opens its popup. */
+    @api
+    focusOpportunity(oppId) {
+        const marker = this._markersByOppId.get(oppId);
+        if (!marker || !this._map) {
+            return;
+        }
+        if (this.heatmapMode) {
+            this._map.setView(marker.getLatLng(), Math.max(this._map.getZoom(), 14));
+            return;
+        }
+        if (this._clusterLayer && typeof this._clusterLayer.zoomToShowLayer === 'function') {
+            this._clusterLayer.zoomToShowLayer(marker, () => marker.openPopup());
+        } else {
+            this._map.setView(marker.getLatLng(), Math.max(this._map.getZoom(), 14));
+            marker.openPopup();
+        }
     }
 
     buildPopup(m) {

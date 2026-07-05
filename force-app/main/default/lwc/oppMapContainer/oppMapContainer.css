@@ -262,8 +262,19 @@
     border-bottom: none;
 }
 
+.op-table tbody tr {
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+
 .op-table tbody tr:hover {
-    background: #fafafd;
+    background: var(--op-primary-soft);
+}
+
+.op-table tbody tr:focus-visible {
+    outline: 2px solid var(--op-primary);
+    outline-offset: -2px;
+    background: var(--op-primary-soft);
 }
 
 .op-map-card {

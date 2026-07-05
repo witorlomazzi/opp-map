@@ -43,6 +43,24 @@ export default class OppMapContainer extends LightningElement {
         this.activeTab = event.currentTarget.dataset.tab;
     }
 
+    handleRowClick(event) {
+        this.focusOnMap(event.currentTarget.dataset.oppId);
+    }
+
+    handleRowKeydown(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.focusOnMap(event.currentTarget.dataset.oppId);
+        }
+    }
+
+    focusOnMap(oppId) {
+        const map = this.refs.map;
+        if (map) {
+            map.focusOpportunity(oppId);
+        }
+    }
+
     handleFilterChange(event) {
         this._filters = event.detail || {};
         this.runQuery();

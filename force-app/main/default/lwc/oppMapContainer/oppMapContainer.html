@@ -72,7 +72,8 @@
                         </thead>
                         <tbody>
                             <template for:each={markers} for:item="m">
-                                <tr key={m.oppId}>
+                                <tr key={m.oppId} data-opp-id={m.oppId} tabindex="0"
+                                    onclick={handleRowClick} onkeydown={handleRowKeydown}>
                                     <td>{m.accountName}</td>
                                     <td>{m.name}</td>
                                     <td><lightning-formatted-number value={m.amount} format-style="currency"></lightning-formatted-number></td>
@@ -113,7 +114,7 @@
                 </div>
             </template>
 
-            <c-opp-map markers={markers} onboundsfilter={handleBoundsFilter}></c-opp-map>
+            <c-opp-map markers={markers} onboundsfilter={handleBoundsFilter} lwc:ref="map"></c-opp-map>
 
             <div class="op-map-footer">
                 <span>{markerCount} oportunidade(s) no mapa</span>
