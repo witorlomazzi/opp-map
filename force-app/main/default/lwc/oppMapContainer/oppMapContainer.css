@@ -27,7 +27,7 @@
 
 .op-shell {
     display: grid;
-    grid-template-columns: 2fr 3fr;
+    grid-template-columns: 3fr 7fr;
     grid-template-rows: auto 1fr;
     gap: 20px;
     padding: 20px;
