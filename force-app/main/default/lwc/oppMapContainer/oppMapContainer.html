@@ -53,6 +53,15 @@
                     Tabela
                     <span class="op-tab-count">{markerCount}</span>
                 </button>
+                <template lwc:if={hasSelectedAccount}>
+                    <button class={accountTabClass} data-tab="account" onclick={handleTabClick}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"></path>
+                            <circle cx="12" cy="10" r="2.5"></circle>
+                        </svg>
+                        Conta
+                    </button>
+                </template>
             </div>
 
             <div class="op-tab-content">
@@ -95,6 +104,24 @@
                         <p class="op-table-empty">Nenhum resultado para "{tableSearchTerm}".</p>
                     </template>
                 </template>
+                <template lwc:if={isAccountTab}>
+                    <div class="op-account-panel">
+                        <div class="op-account-header">
+                            <h2>{selectedAccount.accountName}</h2>
+                            <p>{selectedAccount.opportunities.length} oportunidade(s)</p>
+                        </div>
+                        <template for:each={selectedAccount.opportunities} for:item="opp">
+                            <div key={opp.oppId} class="op-opp-card">
+                                <div class="op-opp-card-name">{opp.name}</div>
+                                <div class="op-opp-card-row">
+                                    <lightning-formatted-number class="op-opp-card-amount"
+                                        value={opp.amount} format-style="currency"></lightning-formatted-number>
+                                    <span class={opp.badgeClass}>{opp.stageName}</span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
             </div>
         </div>
 
@@ -125,7 +152,8 @@
                 </div>
             </template>
 
-            <c-opp-map markers={markers} onboundsfilter={handleBoundsFilter} lwc:ref="map"></c-opp-map>
+            <c-opp-map markers={markers} onboundsfilter={handleBoundsFilter}
+                onaccountopportunities={handleAccountSelected} lwc:ref="map"></c-opp-map>
 
             <div class="op-map-footer">
                 <span>{markerCount} oportunidade(s) no mapa</span>

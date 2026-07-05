@@ -1,20 +1,6 @@
-/* Leaflet renders popups/clusters as raw DOM outside the LWC template, so
+/* Leaflet renders pins/clusters as raw DOM outside the LWC template, so
    this stylesheet is loaded unscoped (loadStyle) instead of living in the
    component's scoped CSS file. */
-.leaflet-popup-content-wrapper {
-    border-radius: 14px !important;
-    box-shadow: 0 16px 40px rgba(16, 24, 40, 0.18) !important;
-    padding: 2px !important;
-}
-
-.leaflet-popup-content {
-    margin: 14px 16px !important;
-    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-.leaflet-popup-tip {
-    box-shadow: none !important;
-}
 
 /* Leaflet's div-icon default gives every icon a white box + border; our pin
    is a transparent inline SVG so that chrome needs to be stripped. */
@@ -22,73 +8,6 @@
     background: transparent !important;
     border: none !important;
     filter: drop-shadow(0 2px 3px rgba(16, 24, 40, 0.35));
-}
-
-.op-popup-account {
-    font-size: 14px;
-    font-weight: 700;
-    color: #1d1f2b;
-    margin-bottom: 2px;
-}
-
-.op-popup-opp {
-    font-size: 12.5px;
-    color: #6b7280;
-    margin-bottom: 8px;
-}
-
-.op-popup-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    font-size: 12.5px;
-    margin-bottom: 4px;
-    color: #1d1f2b;
-}
-
-.op-popup-amount {
-    font-weight: 700;
-    color: #4145c7;
-}
-
-.op-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-}
-
-.op-badge-won {
-    background: #e7f9f2;
-    color: #0a7a54;
-}
-
-.op-badge-open {
-    background: #eef0fe;
-    color: #4145c7;
-}
-
-.op-badge-lost {
-    background: #fdeceb;
-    color: #b42318;
-}
-
-.op-popup-tags {
-    margin-top: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-}
-
-.op-tag-chip {
-    background: #f1f2f7;
-    color: #6b7280;
-    font-size: 10.5px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 999px;
 }
 
 .marker-cluster-small,

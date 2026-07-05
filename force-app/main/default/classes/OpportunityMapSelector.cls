@@ -24,6 +24,7 @@ public with sharing class OpportunityMapSelector {
     public class Marker {
         @AuraEnabled public Id oppId;
         @AuraEnabled public String name;
+        @AuraEnabled public Id accountId;
         @AuraEnabled public String accountName;
         @AuraEnabled public Decimal latitude;
         @AuraEnabled public Decimal longitude;
@@ -134,7 +135,7 @@ public with sharing class OpportunityMapSelector {
             : DEFAULT_LIMIT;
         binds.put('limitPlusOne', maxRows + 1);
 
-        String soql = 'SELECT Id, Name, Amount, StageName, CloseDate, CreatedDate, IsWon, IsClosed, '
+        String soql = 'SELECT Id, Name, AccountId, Amount, StageName, CloseDate, CreatedDate, IsWon, IsClosed, '
             + 'Account.Name, Account.BillingLatitude, Account.BillingLongitude'
             + (extraSelect.isEmpty() ? '' : ', ' + String.join(extraSelect, ', '))
             + ', (SELECT Product2.Name FROM OpportunityLineItems ORDER BY TotalPrice DESC LIMIT 1)'
@@ -163,6 +164,7 @@ public with sharing class OpportunityMapSelector {
             Marker m = new Marker();
             m.oppId = opp.Id;
             m.name = opp.Name;
+            m.accountId = opp.AccountId;
             m.accountName = opp.Account.Name;
             m.latitude = opp.Account.BillingLatitude;
             m.longitude = opp.Account.BillingLongitude;

@@ -12,6 +12,16 @@ function truncateLabel(value) {
     return value.slice(0, TABLE_LABEL_CUT_AT) + '...';
 }
 
+function badgeClassFor(m) {
+    if (m.isWon) {
+        return 'op-badge op-badge-won';
+    }
+    if (m.isClosed) {
+        return 'op-badge op-badge-lost';
+    }
+    return 'op-badge op-badge-open';
+}
+
 /**
  * Orchestrator: holds filter state, calls Apex, caches results per filter
  * combination for the session, exports CSV and surfaces truncation warnings.
@@ -25,6 +35,7 @@ export default class OppMapContainer extends LightningElement {
 
     activeTab = 'filters';
     tableSearchTerm = '';
+    selectedAccount;
 
     _filters = {};
     _bbox = null;
@@ -42,6 +53,14 @@ export default class OppMapContainer extends LightningElement {
         return this.activeTab === 'table';
     }
 
+    get isAccountTab() {
+        return this.activeTab === 'account';
+    }
+
+    get hasSelectedAccount() {
+        return !!this.selectedAccount;
+    }
+
     get filtersTabClass() {
         return this.isFiltersTab ? 'op-tab-btn is-active' : 'op-tab-btn';
     }
@@ -50,8 +69,27 @@ export default class OppMapContainer extends LightningElement {
         return this.isTableTab ? 'op-tab-btn is-active' : 'op-tab-btn';
     }
 
+    get accountTabClass() {
+        return this.isAccountTab ? 'op-tab-btn is-active' : 'op-tab-btn';
+    }
+
     handleTabClick(event) {
         this.activeTab = event.currentTarget.dataset.tab;
+    }
+
+    handleAccountSelected(event) {
+        const { accountName, opportunities } = event.detail;
+        this.selectedAccount = {
+            accountName,
+            opportunities: opportunities.map((opp) => ({
+                oppId: opp.oppId,
+                name: opp.name,
+                amount: opp.amount,
+                stageName: opp.stageName,
+                badgeClass: badgeClassFor(opp)
+            }))
+        };
+        this.activeTab = 'account';
     }
 
     handleTableSearch(event) {

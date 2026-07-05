@@ -3,13 +3,15 @@ import { loadScript, loadStyle } from 'lightning/platformResourceLoader';
 import LEAFLET from '@salesforce/resourceUrl/leaflet';
 import OPP_MAP_THEME from '@salesforce/resourceUrl/oppMapTheme';
 
-const MAX_POPUP_TAGS = 6;
-
 /**
  * Presentational map: receives markers and renders Leaflet with clustering
- * and a heatmap toggle. Emits 'boundsfilter' when the user asks to filter by
- * the current viewport. The accessible table view lives in the container,
- * not here, so it can share the sidebar's tabbed layout.
+ * and a heatmap toggle. One pin is rendered per ACCOUNT (not per opportunity)
+ * since several opportunities commonly share the same account/coordinates;
+ * clicking a pin emits 'accountopportunities' with every opportunity at that
+ * location so the container can list them in the sidebar instead of a
+ * cramped Leaflet popup. Also emits 'boundsfilter' when the user asks to
+ * filter by the current viewport. The accessible table view lives in the
+ * container, not here, so it can share the sidebar's tabbed layout.
  */
 export default class OppMap extends LightningElement {
     _markers = [];
@@ -132,18 +134,35 @@ export default class OppMap extends LightningElement {
             this._heatLayer.addTo(this._map);
             return;
         }
+        // One marker per ACCOUNT: opportunities sharing an account share its
+        // billing coordinates, so grouping avoids stacking identical pins.
+        const groups = new Map(); // accountId -> { accountName, latitude, longitude, opportunities }
+        this._markers.forEach((m) => {
+            const key = m.accountId || `${m.latitude},${m.longitude}`;
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    accountName: m.accountName,
+                    latitude: m.latitude,
+                    longitude: m.longitude,
+                    opportunities: []
+                });
+            }
+            groups.get(key).opportunities.push(m);
+        });
+
         // chunkedLoading spreads the initial clustering work across animation
         // frames instead of doing it all synchronously, so adding thousands
         // of markers doesn't freeze the tab.
         // eslint-disable-next-line no-undef
         this._clusterLayer = L.markerClusterGroup({ chunkedLoading: true, chunkDelay: 30 });
         this._markersByOppId = new Map();
-        const leafletMarkers = this._markers.map((m) => {
+        const leafletMarkers = [];
+        groups.forEach((group) => {
             // eslint-disable-next-line no-undef
-            const marker = L.marker([m.latitude, m.longitude], { icon: this._defaultIcon });
-            marker.bindPopup(() => this.buildPopup(m));
-            this._markersByOppId.set(m.oppId, marker);
-            return marker;
+            const marker = L.marker([group.latitude, group.longitude], { icon: this._defaultIcon });
+            marker.on('click', () => this.emitAccountSelected(group));
+            group.opportunities.forEach((opp) => this._markersByOppId.set(opp.oppId, marker));
+            leafletMarkers.push(marker);
         });
         // addLayers() bulk-inserts in one pass; looping addLayer() per marker
         // is dramatically slower once there are thousands of them.
@@ -151,51 +170,42 @@ export default class OppMap extends LightningElement {
         this._map.addLayer(this._clusterLayer);
     }
 
-    /** Centers the map on a marker (zooming out of its cluster if needed) and opens its popup. */
+    emitAccountSelected(group) {
+        this.dispatchEvent(
+            new CustomEvent('accountopportunities', {
+                detail: { accountName: group.accountName, opportunities: group.opportunities }
+            })
+        );
+    }
+
+    /** Centers the map on a marker (zooming out of its cluster if needed) and lists its account's opportunities. */
     @api
     focusOpportunity(oppId) {
         const marker = this._markersByOppId.get(oppId);
         if (!marker || !this._map) {
             return;
         }
+        const openGroup = () => {
+            const match = this._markers.find((m) => m.oppId === oppId);
+            if (match) {
+                const key = match.accountId || `${match.latitude},${match.longitude}`;
+                const opportunities = this._markers.filter(
+                    (m) => (m.accountId || `${m.latitude},${m.longitude}`) === key
+                );
+                this.emitAccountSelected({ accountName: match.accountName, opportunities });
+            }
+        };
         if (this.heatmapMode) {
             this._map.setView(marker.getLatLng(), Math.max(this._map.getZoom(), 14));
+            openGroup();
             return;
         }
         if (this._clusterLayer && typeof this._clusterLayer.zoomToShowLayer === 'function') {
-            this._clusterLayer.zoomToShowLayer(marker, () => marker.openPopup());
+            this._clusterLayer.zoomToShowLayer(marker, openGroup);
         } else {
             this._map.setView(marker.getLatLng(), Math.max(this._map.getZoom(), 14));
-            marker.openPopup();
+            openGroup();
         }
-    }
-
-    buildPopup(m) {
-        const amount = m.amount != null
-            ? Number(m.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-            : '—';
-        const tags = Object.values(m.multipicklistValues || {})
-            .join(';')
-            .split(';')
-            .filter(Boolean)
-            .slice(0, MAX_POPUP_TAGS);
-        const esc = (s) => String(s == null ? '' : s)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        const badgeClass = m.isWon ? 'op-badge-won' : m.isClosed ? 'op-badge-lost' : 'op-badge-open';
-        const tagsHtml = tags.length
-            ? `<div class="op-popup-tags">${tags.map((t) => `<span class="op-tag-chip">${esc(t)}</span>`).join('')}</div>`
-            : '';
-        const productRow = m.mainProduct
-            ? `<div class="op-popup-row"><span>Produto</span><span>${esc(m.mainProduct)}</span></div>`
-            : '';
-        return (
-            `<div class="op-popup-account">${esc(m.accountName)}</div>` +
-            `<div class="op-popup-opp">${esc(m.name)}</div>` +
-            `<div class="op-popup-row"><span>Valor</span><span class="op-popup-amount">${esc(amount)}</span></div>` +
-            `<div class="op-popup-row"><span>Estágio</span><span class="op-badge ${badgeClass}">${esc(m.stageName)}</span></div>` +
-            productRow +
-            tagsHtml
-        );
     }
 
     get toggleLabel() {
