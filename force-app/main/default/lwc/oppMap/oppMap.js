@@ -20,6 +20,7 @@ export default class OppMap extends LightningElement {
     _clusterLayer;
     _heatLayer;
     _resizeObserver;
+    _defaultIcon;
 
     @api
     get markers() {
@@ -49,7 +50,7 @@ export default class OppMap extends LightningElement {
                 ])
             )
             .then(() => {
-                this.fixDefaultIconUrls();
+                this.buildDefaultIcon();
                 this.initMap();
                 this.leafletReady = true;
                 this.renderMarkers();
@@ -60,18 +61,25 @@ export default class OppMap extends LightningElement {
             });
     }
 
-    fixDefaultIconUrls() {
-        // Leaflet auto-detects its default marker icon path from the <script>
-        // tag that loaded it; Lightning's sandboxing breaks that detection, so
-        // the icons 404 silently and the browser falls back to alt text. Point
-        // them at the static resource explicitly instead.
+    buildDefaultIcon() {
+        // L.Marker's shared default icon is instantiated the moment leaflet.js
+        // is parsed (Marker.prototype.options.icon = new IconDefault()),
+        // using whatever icon URLs Leaflet auto-detected from its own <script>
+        // tag at that instant. Lightning's sandboxing breaks that detection,
+        // and patching L.Icon.Default afterwards doesn't reach that
+        // already-built instance (it copied the options, not a live
+        // reference). Building our own icon and passing it explicitly to
+        // every marker sidesteps the whole problem.
         // eslint-disable-next-line no-undef
-        delete L.Icon.Default.prototype._getIconUrl;
-        // eslint-disable-next-line no-undef
-        L.Icon.Default.mergeOptions({
-            iconRetinaUrl: LEAFLET + '/images/marker-icon-2x.png',
+        this._defaultIcon = L.icon({
             iconUrl: LEAFLET + '/images/marker-icon.png',
-            shadowUrl: LEAFLET + '/images/marker-shadow.png'
+            iconRetinaUrl: LEAFLET + '/images/marker-icon-2x.png',
+            shadowUrl: LEAFLET + '/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            tooltipAnchor: [16, -28],
+            shadowSize: [41, 41]
         });
     }
 
@@ -129,7 +137,7 @@ export default class OppMap extends LightningElement {
         this._clusterLayer = L.markerClusterGroup();
         this._markers.forEach((m) => {
             // eslint-disable-next-line no-undef
-            const marker = L.marker([m.latitude, m.longitude]);
+            const marker = L.marker([m.latitude, m.longitude], { icon: this._defaultIcon });
             marker.bindPopup(this.buildPopup(m));
             this._clusterLayer.addLayer(marker);
         });
