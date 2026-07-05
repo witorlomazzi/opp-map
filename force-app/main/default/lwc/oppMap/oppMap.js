@@ -48,6 +48,7 @@ export default class OppMap extends LightningElement {
                 ])
             )
             .then(() => {
+                this.fixDefaultIconUrls();
                 this.initMap();
                 this.leafletReady = true;
                 this.renderMarkers();
@@ -56,6 +57,21 @@ export default class OppMap extends LightningElement {
                 // eslint-disable-next-line no-console
                 console.error('Leaflet failed to load', error);
             });
+    }
+
+    fixDefaultIconUrls() {
+        // Leaflet auto-detects its default marker icon path from the <script>
+        // tag that loaded it; Lightning's sandboxing breaks that detection, so
+        // the icons 404 silently and the browser falls back to alt text. Point
+        // them at the static resource explicitly instead.
+        // eslint-disable-next-line no-undef
+        delete L.Icon.Default.prototype._getIconUrl;
+        // eslint-disable-next-line no-undef
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: LEAFLET + '/images/marker-icon-2x.png',
+            iconUrl: LEAFLET + '/images/marker-icon.png',
+            shadowUrl: LEAFLET + '/images/marker-shadow.png'
+        });
     }
 
     initMap() {
