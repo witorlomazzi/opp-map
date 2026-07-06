@@ -1,6 +1,11 @@
 import { LightningElement } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getOpportunities from '@salesforce/apex/OpportunityMapController.getOpportunities';
 import requestGeocoding from '@salesforce/apex/OpportunityMapController.requestGeocoding';
+import getTeamMembers from '@salesforce/apex/OpportunityMapController.getTeamMembers';
+import getSavedViews from '@salesforce/apex/OpportunityMapController.getSavedViews';
+import saveView from '@salesforce/apex/OpportunityMapController.saveView';
+import deleteView from '@salesforce/apex/OpportunityMapController.deleteView';
 
 const TABLE_LABEL_MAX_LENGTH = 15;
 const TABLE_LABEL_CUT_AT = 12;
@@ -41,8 +46,12 @@ export default class OppMapContainer extends LightningElement {
     _bbox = null;
     _cache = new Map();
 
+    savedViews = [];
+    newViewName = '';
+
     connectedCallback() {
         this.runQuery();
+        this.loadSavedViews();
     }
 
     get isFiltersTab() {
@@ -86,10 +95,52 @@ export default class OppMapContainer extends LightningElement {
                 name: opp.name,
                 amount: opp.amount,
                 stageName: opp.stageName,
-                badgeClass: badgeClassFor(opp)
+                badgeClass: badgeClassFor(opp),
+                ownerName: opp.ownerName,
+                createdDate: opp.createdDate,
+                activityBucketClass: 'op-age-badge op-age-' + (opp.activityBucket || 'fresh').toLowerCase(),
+                activityBucketLabel: opp.activityBucket,
+                recordUrl: '/lightning/r/Opportunity/' + opp.oppId + '/view',
+                teamExpanded: false,
+                teamMembers: null,
+                teamLoading: false,
+                hasNoTeamMembers: false
             }))
         };
         this.activeTab = 'account';
+    }
+
+    async handleToggleTeam(event) {
+        event.stopPropagation();
+        const oppId = event.currentTarget.dataset.oppId;
+        const opportunities = this.selectedAccount.opportunities.map((opp) => ({ ...opp }));
+        const target = opportunities.find((opp) => opp.oppId === oppId);
+        if (!target) {
+            return;
+        }
+        target.teamExpanded = !target.teamExpanded;
+        this.selectedAccount = { ...this.selectedAccount, opportunities };
+
+        if (target.teamExpanded && target.teamMembers === null) {
+            target.teamLoading = true;
+            this.selectedAccount = { ...this.selectedAccount, opportunities: [...opportunities] };
+            try {
+                const members = await getTeamMembers({ opportunityId: oppId });
+                target.teamMembers = members;
+                target.hasNoTeamMembers = members.length === 0;
+            } catch (e) {
+                target.teamMembers = [];
+                target.hasNoTeamMembers = true;
+            } finally {
+                target.teamLoading = false;
+                this.selectedAccount = {
+                    ...this.selectedAccount,
+                    opportunities: this.selectedAccount.opportunities.map((opp) =>
+                        opp.oppId === oppId ? { ...target } : opp
+                    )
+                };
+            }
+        }
     }
 
     handleTableSearch(event) {
@@ -211,5 +262,76 @@ export default class OppMapContainer extends LightningElement {
 
     get hasMarkers() {
         return this.markers.length > 0;
+    }
+
+    async loadSavedViews() {
+        try {
+            this.savedViews = await getSavedViews();
+        } catch (e) {
+            this.savedViews = [];
+        }
+    }
+
+    get hasSavedViews() {
+        return this.savedViews.length > 0;
+    }
+
+    get isSaveDisabled() {
+        return !this.newViewName || !this.newViewName.trim();
+    }
+
+    handleNewViewNameChange(event) {
+        this.newViewName = event.target.value;
+    }
+
+    async handleSaveView() {
+        try {
+            await saveView({ viewName: this.newViewName.trim(), filtersJson: JSON.stringify(this.effectiveFilters) });
+            this.newViewName = '';
+            await this.loadSavedViews();
+            this.dispatchEvent(
+                new ShowToastEvent({ title: 'Visão salva', variant: 'success' })
+            );
+        } catch (e) {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Erro ao salvar visão',
+                    message: e.body ? e.body.message : String(e),
+                    variant: 'error'
+                })
+            );
+        }
+    }
+
+    handleApplyView(event) {
+        const viewId = event.currentTarget.dataset.id;
+        const view = this.savedViews.find((v) => v.Id === viewId);
+        if (!view) {
+            return;
+        }
+        try {
+            this._filters = JSON.parse(view.Filters_JSON__c) || {};
+            this._bbox = this._filters.bbox || null;
+            this.runQuery();
+        } catch (e) {
+            // malformed saved payload, ignore silently
+        }
+    }
+
+    async handleDeleteView(event) {
+        event.stopPropagation();
+        const viewId = event.currentTarget.dataset.id;
+        try {
+            await deleteView({ viewId });
+            await this.loadSavedViews();
+        } catch (e) {
+            this.dispatchEvent(
+                new ShowToastEvent({
+                    title: 'Erro ao excluir visão',
+                    message: e.body ? e.body.message : String(e),
+                    variant: 'error'
+                })
+            );
+        }
     }
 }

@@ -71,4 +71,40 @@ public with sharing class OpportunityMapController {
     public static Integer requestGeocoding() {
         return AccountGeocodingQueue.enqueuePendingAccounts();
     }
+
+    @AuraEnabled(cacheable=true)
+    public static List<OpportunityTeamSelector.TeamMemberView> getTeamMembers(Id opportunityId) {
+        try {
+            return OpportunityTeamSelector.getTeamMembers(opportunityId);
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled(cacheable=true)
+    public static List<Saved_Map_View__c> getSavedViews() {
+        try {
+            return SavedMapViewSelector.getMyViews();
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static Id saveView(String viewName, String filtersJson) {
+        try {
+            return SavedMapViewService.saveView(viewName, filtersJson);
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled
+    public static void deleteView(Id viewId) {
+        try {
+            SavedMapViewService.deleteView(viewId);
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
 }

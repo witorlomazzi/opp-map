@@ -7,6 +7,15 @@
         <apexClass>OpportunityMapController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <objectPermissions>
+        <object>Saved_Map_View__c</object>
+        <allowCreate>true</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>true</allowEdit>
+        <allowDelete>true</allowDelete>
+        <modifyAllRecords>false</modifyAllRecords>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
     <fieldPermissions>
         <field>Opportunity.Tag__c</field>
         <readable>true</readable>
@@ -14,6 +23,11 @@
     </fieldPermissions>
     <fieldPermissions>
         <field>Account.Geocode_Cache_Timestamp__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Saved_Map_View__c.Filters_JSON__c</field>
         <readable>true</readable>
         <editable>true</editable>
     </fieldPermissions>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Heatmap_Min_Amount__c</fullName>
+    <label>Heatmap Min Amount</label>
+    <type>Number</type>
+    <precision>16</precision>
+    <scale>2</scale>
+    <description>Minimum Opportunity Amount for a marker to be included in the heatmap layer. Blank/zero includes all.</description>
+</CustomField>

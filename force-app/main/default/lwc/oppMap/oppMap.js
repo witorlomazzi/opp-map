@@ -17,12 +17,14 @@ export default class OppMap extends LightningElement {
     _markers = [];
     leafletReady = false;
     heatmapMode = false;
+    ageColorMode = false;
 
     _map;
     _clusterLayer;
     _heatLayer;
     _resizeObserver;
     _defaultIcon;
+    _iconsByBucket = {};
     _markersByOppId = new Map();
 
     @api
@@ -82,6 +84,40 @@ export default class OppMap extends LightningElement {
             iconAnchor: [14, 28],
             popupAnchor: [0, -26]
         });
+
+        // Age-coloring palette mirrors the Deal Risk Engine's Fresh/Stale/Cold
+        // language, so the same visual vocabulary means the same thing across
+        // this portfolio's projects.
+        const bucketColors = { Fresh: '#0f9d58', Stale: '#dd7a01', Cold: '#ba0517' };
+        this._iconsByBucket = {};
+        Object.keys(bucketColors).forEach((bucket) => {
+            // eslint-disable-next-line no-undef
+            this._iconsByBucket[bucket] = L.divIcon({
+                className: 'op-marker-pin',
+                html:
+                    '<svg viewBox="0 0 24 24" width="28" height="28">' +
+                    '<path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8z" fill="' +
+                    bucketColors[bucket] +
+                    '"/>' +
+                    '<circle cx="12" cy="10" r="3.2" fill="#ffffff"/>' +
+                    '</svg>',
+                iconSize: [28, 28],
+                iconAnchor: [14, 28],
+                popupAnchor: [0, -26]
+            });
+        });
+    }
+
+    /** Worst bucket among a group's opportunities (Cold > Stale > Fresh) decides the pin color. */
+    worstBucketFor(opportunities) {
+        const severity = { Cold: 3, Stale: 2, Fresh: 1 };
+        let worst = 'Fresh';
+        opportunities.forEach((opp) => {
+            if (opp.activityBucket && severity[opp.activityBucket] > severity[worst]) {
+                worst = opp.activityBucket;
+            }
+        });
+        return worst;
     }
 
     initMap() {
@@ -158,8 +194,11 @@ export default class OppMap extends LightningElement {
         this._markersByOppId = new Map();
         const leafletMarkers = [];
         groups.forEach((group) => {
+            const icon = this.ageColorMode
+                ? this._iconsByBucket[this.worstBucketFor(group.opportunities)] || this._defaultIcon
+                : this._defaultIcon;
             // eslint-disable-next-line no-undef
-            const marker = L.marker([group.latitude, group.longitude], { icon: this._defaultIcon });
+            const marker = L.marker([group.latitude, group.longitude], { icon });
             marker.on('click', () => this.emitAccountSelected(group));
             group.opportunities.forEach((opp) => this._markersByOppId.set(opp.oppId, marker));
             leafletMarkers.push(marker);
@@ -226,6 +265,19 @@ export default class OppMap extends LightningElement {
 
     handleToggleHeatmap() {
         this.heatmapMode = !this.heatmapMode;
+        this.renderMarkers();
+    }
+
+    get ageColorButtonClass() {
+        return this.ageColorMode ? 'op-icon-btn is-active' : 'op-icon-btn';
+    }
+
+    get ageColorLabel() {
+        return this.ageColorMode ? 'Ver cor padrão' : 'Colorir por idade';
+    }
+
+    handleToggleAgeColor() {
+        this.ageColorMode = !this.ageColorMode;
         this.renderMarkers();
     }
 

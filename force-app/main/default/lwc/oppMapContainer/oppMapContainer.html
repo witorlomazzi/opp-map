@@ -66,6 +66,28 @@
 
             <div class="op-tab-content">
                 <template lwc:if={isFiltersTab}>
+                    <div class="op-saved-views">
+                        <p class="op-saved-views-title">Visões salvas</p>
+                        <template lwc:if={hasSavedViews}>
+                            <template for:each={savedViews} for:item="view">
+                                <div key={view.Id} class="op-saved-view-row" data-id={view.Id} onclick={handleApplyView}>
+                                    <span class="op-saved-view-name">{view.Name}</span>
+                                    <button class="op-saved-view-delete" data-id={view.Id} onclick={handleDeleteView} title="Excluir visão">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M6 6l12 12M18 6 6 18"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </template>
+                        <template lwc:else>
+                            <p class="op-saved-views-empty">Nenhuma visão salva ainda.</p>
+                        </template>
+                        <div class="op-saved-view-save-row">
+                            <input type="text" placeholder="Nome da visão" value={newViewName} oninput={handleNewViewNameChange} />
+                            <button class="op-btn op-btn-primary" onclick={handleSaveView} disabled={isSaveDisabled}>Salvar</button>
+                        </div>
+                    </div>
                     <c-opp-map-filter-panel onfilterchange={handleFilterChange}></c-opp-map-filter-panel>
                 </template>
                 <template lwc:if={isTableTab}>
@@ -112,12 +134,44 @@
                         </div>
                         <template for:each={selectedAccount.opportunities} for:item="opp">
                             <div key={opp.oppId} class="op-opp-card">
-                                <div class="op-opp-card-name">{opp.name}</div>
+                                <div class="op-opp-card-name">
+                                    {opp.name}
+                                    <a href={opp.recordUrl} target="_blank" class="op-opp-card-link" title="Abrir registro">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                            <path d="M15 3h6v6M10 14 21 3"></path>
+                                        </svg>
+                                    </a>
+                                </div>
                                 <div class="op-opp-card-row">
                                     <lightning-formatted-number class="op-opp-card-amount"
                                         value={opp.amount} format-style="currency"></lightning-formatted-number>
                                     <span class={opp.badgeClass}>{opp.stageName}</span>
+                                    <span class={opp.activityBucketClass}>{opp.activityBucketLabel}</span>
                                 </div>
+                                <div class="op-opp-card-meta">
+                                    <span>Proprietário: {opp.ownerName}</span>
+                                    <span><lightning-formatted-date-time value={opp.createdDate} year="numeric" month="2-digit" day="2-digit"></lightning-formatted-date-time></span>
+                                </div>
+                                <button class="op-opp-card-team-toggle" data-opp-id={opp.oppId} onclick={handleToggleTeam}>
+                                    Equipe da oportunidade
+                                </button>
+                                <template lwc:if={opp.teamExpanded}>
+                                    <div class="op-opp-card-team">
+                                        <template lwc:if={opp.teamLoading}>
+                                            <lightning-spinner size="x-small" alternative-text="Carregando"></lightning-spinner>
+                                        </template>
+                                        <template for:each={opp.teamMembers} for:item="member">
+                                            <div key={member.userName} class="op-opp-card-team-row">
+                                                <span>{member.userName}</span>
+                                                <span class="op-opp-card-team-role">{member.role}</span>
+                                            </div>
+                                        </template>
+                                        <template lwc:if={opp.hasNoTeamMembers}>
+                                            <p class="op-opp-card-team-empty">Sem membros de equipe.</p>
+                                        </template>
+                                    </div>
+                                </template>
                             </div>
                         </template>
                     </div>

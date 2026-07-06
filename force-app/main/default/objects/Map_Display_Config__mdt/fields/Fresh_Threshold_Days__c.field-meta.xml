@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Fresh_Threshold_Days__c</fullName>
+    <label>Fresh Threshold Days</label>
+    <type>Number</type>
+    <precision>4</precision>
+    <scale>0</scale>
+    <required>true</required>
+    <description>Opportunities with days-since-last-activity below this value are colored "Fresh" on the map.</description>
+</CustomField>

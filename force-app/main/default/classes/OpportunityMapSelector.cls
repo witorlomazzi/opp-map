@@ -36,6 +36,10 @@ public with sharing class OpportunityMapSelector {
         @AuraEnabled public Integer cycleAgeDays;
         @AuraEnabled public String mainProduct;
         @AuraEnabled public Map<String, String> multipicklistValues;
+        @AuraEnabled public DateTime createdDate;
+        @AuraEnabled public String ownerName;
+        @AuraEnabled public Date lastActivityDate;
+        @AuraEnabled public String activityBucket;
     }
 
     public static MapResult search(OppMapFilters filters) {
@@ -136,6 +140,7 @@ public with sharing class OpportunityMapSelector {
         binds.put('limitPlusOne', maxRows + 1);
 
         String soql = 'SELECT Id, Name, AccountId, Amount, StageName, CloseDate, CreatedDate, IsWon, IsClosed, '
+            + 'Owner.Name, LastActivityDate, '
             + 'Account.Name, Account.BillingLatitude, Account.BillingLongitude'
             + (extraSelect.isEmpty() ? '' : ', ' + String.join(extraSelect, ', '))
             + ', (SELECT Product2.Name FROM OpportunityLineItems ORDER BY TotalPrice DESC LIMIT 1)'
@@ -148,6 +153,8 @@ public with sharing class OpportunityMapSelector {
         if (truncated) {
             rows = trimTo(rows, maxRows);
         }
+
+        Map_Display_Config__mdt displayConfig = MapDisplayConfigSelector.getConfig();
 
         MapResult result = new MapResult();
         result.markers = new List<Marker>();
@@ -177,6 +184,10 @@ public with sharing class OpportunityMapSelector {
             m.mainProduct = opp.OpportunityLineItems.isEmpty()
                 ? null
                 : opp.OpportunityLineItems[0].Product2.Name;
+            m.createdDate = opp.CreatedDate;
+            m.ownerName = opp.Owner.Name;
+            m.lastActivityDate = opp.LastActivityDate;
+            m.activityBucket = activityBucketFor(opp.LastActivityDate, opp.CreatedDate.date(), today, displayConfig);
             m.multipicklistValues = new Map<String, String>();
             for (String fieldName : multiFieldNames) {
                 Object value = opp.get(fieldName);
@@ -189,6 +200,19 @@ public with sharing class OpportunityMapSelector {
         result.truncated = truncated;
         result.returnedCount = result.markers.size();
         return result;
+    }
+
+    /** Fresh / Stale / Cold, based on days since last activity (falls back to CreatedDate when never touched). */
+    private static String activityBucketFor(Date lastActivityDate, Date createdDate, Date today, Map_Display_Config__mdt config) {
+        Date referenceDate = lastActivityDate != null ? lastActivityDate : createdDate;
+        Integer daysSince = referenceDate.daysBetween(today);
+        if (daysSince < config.Fresh_Threshold_Days__c) {
+            return 'Fresh';
+        }
+        if (daysSince < config.Stale_Threshold_Days__c) {
+            return 'Stale';
+        }
+        return 'Cold';
     }
 
     private static List<Opportunity> trimTo(List<Opportunity> rows, Integer size) {

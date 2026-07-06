@@ -21,6 +21,9 @@ flowchart TB
         DISC["OpportunityFieldDiscovery<br/>Schema.describe → multipicklists"]
         SEL["OpportunityMapSelector<br/>SOQL dinâmico + binds + USER_MODE"]
         GEO["AccountGeocodingQueue<br/>Queueable + callout"]
+        CFG["MapDisplayConfigSelector<br/>Map_Display_Config__mdt"]
+        TEAM["OpportunityTeamSelector<br/>SOQL 100% dinâmico"]
+        VIEW["SavedMapViewSelector / Service"]
     end
 
     subgraph Ext["Externos"]
@@ -38,6 +41,9 @@ flowchart TB
     CTRL --> SEL
     DISC -.->|whitelist de campos| SEL
     CTRL --> GEO --> NOM
+    CTRL --> TEAM
+    CTRL --> VIEW
+    SEL --> CFG
     MAP --> SR
     MAP --> OSM
 ```
@@ -60,6 +66,28 @@ O núcleo do projeto é montar SOQL dinamicamente **sem abrir brecha de injectio
 | Produto | Multi-select de produtos via `OpportunityLineItem → Product2` |
 | Dinâmico | Qualquer multipicklist descoberto, com modos "contém qualquer" e "contém todos" |
 | Geográfico | Bounding box da área visível do mapa (botão "Filtrar pela área visível") |
+
+## Painel de conta enriquecido
+
+Ao clicar num pin, o painel lateral mostra, por oportunidade: proprietário, data de abertura, um badge de
+**idade da oportunidade** (Fresh/Stale/Cold, ver seção abaixo), link direto para abrir o registro
+(`/lightning/r/Opportunity/{id}/view`), e um accordion "Equipe da oportunidade" que carrega sob demanda os
+membros do Opportunity Team (`OpportunityTeamMember`). Como Opportunity Teams é um recurso desativável da org,
+`OpportunityTeamSelector` usa SOQL 100% dinâmico (`Database.query`) em vez de tipagem estática — referenciar
+`OpportunityTeamMember` como tipo Apex quebraria a compilação em qualquer org com o recurso desligado — e
+degrada silenciosamente para lista vazia se a consulta falhar.
+
+## Cor por idade da oportunidade
+
+Um segundo toggle no mapa (ícone de círculo) colore os pins por tempo desde a última atividade, usando a mesma
+linguagem visual (Fresh/Stale/Cold) do projeto Deal Risk & Renewal Intelligence Engine do portfólio. Os limiares
+de dias são 100% configuráveis via **`Map_Display_Config__mdt`** (registro `Default`), sem precisar tocar em
+Apex para ajustar — alinhando este projeto ao padrão zero-code dos demais.
+
+## Visualizações salvas
+
+O usuário pode salvar a combinação atual de filtros com um nome (`Saved_Map_View__c.Filters_JSON__c`) e
+reaplicá-la depois com um clique, sem precisar reconfigurar os filtros manualmente toda vez.
 
 ## Trade-off: Leaflet vs Google Maps
 
@@ -94,7 +122,7 @@ Depois, adicione o componente **Opportunity Map Container** a uma App Page no Li
 
 ## Testes
 
-- **Apex** (19 testes, 100%): construção do SOQL com todas as combinações de filtro, whitelist anti-injection, descoberta de multipicklist, geocoding com `HttpCalloutMock` (sucesso, vazio, erro HTTP, cache).
+- **Apex** (33 testes, 100%): construção do SOQL com todas as combinações de filtro, whitelist anti-injection, descoberta de multipicklist, geocoding com `HttpCalloutMock` (sucesso, vazio, erro HTTP, cache), cor por idade, painel de equipe (com e sem Opportunity Teams habilitado), visualizações salvas (CRUD).
 - **Jest** (6 testes): renderização condicional dos filtros dinâmicos a partir do wire mockado, debounce + payload do `filterchange`, cache client-side por combinação de filtro, estados de erro.
 
 ```bash
@@ -112,7 +140,7 @@ sf apex run test --tests OpportunityMapSelectorTest --tests OppMapControllerAndD
 
 ## Demonstração
 
-> _Placeholder: adicionar GIF do mapa com clustering, heatmap e filtros dinâmicos._
+Demo ao vivo (dados fictícios, roda 100% no navegador) em [salesforce.flupdigital.com.br/#demo-map](https://salesforce.flupdigital.com.br/#demo-map).
 
 ## Licença
 

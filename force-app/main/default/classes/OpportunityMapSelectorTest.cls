@@ -136,4 +136,18 @@ private class OpportunityMapSelectorTest {
         Assert.areEqual(1, result.returnedCount);
         Assert.isTrue(result.truncated, 'More rows exist than the requested limit');
     }
+
+    @IsTest
+    static void markersIncludeOwnerCreatedDateAndActivityBucket() {
+        OpportunityMapSelector.MapResult result = OpportunityMapSelector.search(filters());
+        for (OpportunityMapSelector.Marker marker : result.markers) {
+            Assert.isNotNull(marker.ownerName, 'Owner name should be populated');
+            Assert.isNotNull(marker.createdDate, 'CreatedDate should be populated');
+            Assert.isNotNull(marker.activityBucket, 'Activity bucket should always be computed');
+            Assert.isTrue(
+                new Set<String>{ 'Fresh', 'Stale', 'Cold' }.contains(marker.activityBucket),
+                'Unexpected activity bucket: ' + marker.activityBucket
+            );
+        }
+    }
 }
