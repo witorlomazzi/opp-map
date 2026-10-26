@@ -1,10 +1,24 @@
-# Opportunity Map — Mapa de Oportunidades com Filtros Dinâmicos
+# Opportunity Map
 
-Componente Lightning Web Component que renderiza um mapa mundial interativo com Oportunidades geolocalizadas e um painel de filtros **construído dinamicamente** — qualquer campo multipicklist customizado da Opportunity (ex.: `Tag__c`, `Etiqueta__c`) vira um filtro automaticamente, sem uma linha de código a mais.
+Mapa interativo de oportunidades em Lightning Web Components, com painel de filtros montado em runtime: qualquer campo multipicklist da Opportunity vira filtro sem alterar código.
 
-## O problema de negócio
+[![CI](https://github.com/witorlomazzi/opp-map/actions/workflows/ci.yml/badge.svg)](https://github.com/witorlomazzi/opp-map/actions/workflows/ci.yml)
 
-Gestores comerciais precisam enxergar a distribuição geográfica do pipeline — onde estão as oportunidades, quais regiões concentram vitórias, quais territórios estão descobertos — e filtrar essa visão pelas dimensões que **cada org** define (tags, segmentos, produtos). Componentes de mapa tradicionais quebram quando a org adiciona um campo novo; este descobre os campos em runtime via `Schema.describe`.
+> Projeto demonstrativo, com empresa e dados fictícios. Experiências profissionais reais não são publicadas por confidencialidade.
+
+**Estudo de caso:** [salesforce.flupdigital.com.br/projetos/opportunity-map.html](https://salesforce.flupdigital.com.br/projetos/opportunity-map.html) · **Demo no navegador:** [abrir a demo](https://salesforce.flupdigital.com.br/projetos/opportunity-map.html#demo)
+
+## O problema
+
+Gestores comerciais precisam ver onde o pipeline está concentrado, quais regiões convertem e quais territórios estão descobertos. Uma lista não mostra isso. E componentes de mapa com filtros fixos quebram quando a org cria um campo novo de segmentação.
+
+## A solução
+
+- Mapa com clustering, heatmap de oportunidades ganhas e tabela acessível como alternativa ao mapa.
+- Filtros descobertos em runtime via `Schema.describe`: tags, segmentos e qualquer multipicklist da Opportunity.
+- Painel da conta com proprietário, idade da oportunidade, link para o registro e equipe carregada sob demanda.
+- Visões salvas: o usuário guarda uma combinação de filtros e reaplica com um clique.
+- Geocodificação assíncrona das contas sem coordenadas, com cache.
 
 ## Arquitetura
 
@@ -48,100 +62,73 @@ flowchart TB
     MAP --> OSM
 ```
 
-## Segurança do SOQL dinâmico
+## Decisões técnicas
 
-O núcleo do projeto é montar SOQL dinamicamente **sem abrir brecha de injection**:
+| Decisão                                          | Por quê                                                                           | Custo da escolha                                                |
+| ------------------------------------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Leaflet em Static Resource, e não Google Maps    | Sem chave de API nem billing, e sem script externo (compatível com CSP)           | Geocoding e pontos de interesse menos precisos que os do Google |
+| Filtros descobertos por `Schema.describe`        | A org cria um campo novo e ele aparece como filtro, sem deploy                    | Exige whitelist rígida para o SOQL dinâmico continuar seguro    |
+| Geocodificação em `Queueable`                    | Callout fora da transação do usuário, com encadeamento de lotes                   | O mapa mostra a conta só depois do processamento                |
+| `OpportunityTeamSelector` com SOQL 100% dinâmico | Opportunity Teams pode estar desligado; referenciar o tipo quebraria a compilação | Perde a checagem de tipo em tempo de compilação                 |
+| Limiares de idade em `Map_Display_Config__mdt`   | O admin ajusta sem tocar em Apex                                                  | Mais um registro de configuração para manter                    |
 
-1. **Valores** entram sempre por bind variables (`Database.queryWithBinds`).
-2. **Nomes de campo** vindos do cliente só entram na query se existirem na whitelist gerada por `Schema.describe` (apenas multipicklists reais da Opportunity) — nome desconhecido lança exceção (há teste cobrindo tentativa de injection).
-3. Literais de `INCLUDES` (que não aceita bind) passam por `String.escapeSingleQuotes`.
-4. A query final roda `WITH USER_MODE` — CRUD/FLS do usuário respeitados de ponta a ponta.
+Para trocar por Google Maps, substitua o carregamento em `oppMap.js` pelo script `maps.googleapis.com` (registrando o Trusted Site no CSP) e troque `L.map`/`L.marker` por `google.maps.Map`/`AdvancedMarkerElement`. Painel, controller e selector não mudam: o contrato é só a lista de marcadores.
 
-## Filtros suportados
+## Segurança
 
-| Categoria | Filtros |
-|---|---|
-| Temporal | Range de `CloseDate`; idade do ciclo (`CloseDate − CreatedDate`, pós-query) |
-| Estrutural | Record Type, faixa de `Amount`, estágios, ganhas/perdidas/abertas |
-| Produto | Multi-select de produtos via `OpportunityLineItem → Product2` |
-| Dinâmico | Qualquer multipicklist descoberto, com modos "contém qualquer" e "contém todos" |
-| Geográfico | Bounding box da área visível do mapa (botão "Filtrar pela área visível") |
+O núcleo do projeto é montar SOQL dinâmico sem abrir brecha para injeção:
 
-## Painel de conta enriquecido
+1. **Valores** entram sempre por bind (`Database.queryWithBinds`).
+2. **Nomes de campo** vindos do cliente só entram na query se estiverem na whitelist gerada por `Schema.describe`. Nome desconhecido lança exceção, e há teste cobrindo a tentativa de injeção.
+3. Literais de `INCLUDES`, que não aceita bind, passam por `String.escapeSingleQuotes`.
+4. A query roda `WITH USER_MODE`: CRUD, FLS e sharing do usuário valem de ponta a ponta.
 
-Ao clicar num pin, o painel lateral mostra, por oportunidade: proprietário, data de abertura, um badge de
-**idade da oportunidade** (Fresh/Stale/Cold, ver seção abaixo), link direto para abrir o registro
-(`/lightning/r/Opportunity/{id}/view`), e um accordion "Equipe da oportunidade" que carrega sob demanda os
-membros do Opportunity Team (`OpportunityTeamMember`). Como Opportunity Teams é um recurso desativável da org,
-`OpportunityTeamSelector` usa SOQL 100% dinâmico (`Database.query`) em vez de tipagem estática — referenciar
-`OpportunityTeamMember` como tipo Apex quebraria a compilação em qualquer org com o recurso desligado — e
-degrada silenciosamente para lista vazia se a consulta falhar.
+## Desempenho
 
-## Cor por idade da oportunidade
+- Limite de 10.000 marcadores por consulta, com aviso para refinar os filtros e flag `truncated`.
+- `chunkedLoading` no clustering, para não travar o navegador com milhares de marcadores.
+- Cache no cliente por combinação de filtros e debounce de 400 ms no painel.
+- Medição feita com cerca de 1.700 oportunidades geolocalizadas carregadas via Bulk API: consulta única entre 70 e 200 ms. O script está em `scripts/apex/perf-test-selector.apex`.
 
-Um segundo toggle no mapa (ícone de círculo) colore os pins por tempo desde a última atividade, usando a mesma
-linguagem visual (Fresh/Stale/Cold) do projeto Deal Risk & Renewal Intelligence Engine do portfólio. Os limiares
-de dias são 100% configuráveis via **`Map_Display_Config__mdt`** (registro `Default`), sem precisar tocar em
-Apex para ajustar — alinhando este projeto ao padrão zero-code dos demais.
+## Testes
 
-## Visualizações salvas
+- **Apex:** 29 métodos de teste. Cobrem a montagem do SOQL com todas as combinações de filtro, a whitelist contra injeção, a descoberta de multipicklists, o geocoding com `HttpCalloutMock` (sucesso, vazio, erro HTTP e cache), a cor por idade, a equipe da oportunidade com e sem Opportunity Teams e as visões salvas.
+- **Jest:** 6 testes. Cobrem filtros dinâmicos a partir do wire mockado, debounce e payload do `filterchange`, cache por combinação de filtros e estados de erro.
+- **CI:** o GitHub Actions roda o Jest e o Salesforce Code Analyzer (PMD) em cada push e pull request. O deploy de validação com testes Apex roda quando o repositório tem uma org de CI configurada.
 
-O usuário pode salvar a combinação atual de filtros com um nome (`Saved_Map_View__c.Filters_JSON__c`) e
-reaplicá-la depois com um clique, sem precisar reconfigurar os filtros manualmente toda vez.
+```bash
+npm install --legacy-peer-deps
+npm run test:unit
+sf apex run test --test-level RunLocalTests --code-coverage --wait 20
+```
 
-## Trade-off: Leaflet vs Google Maps
-
-**Escolhido: Leaflet.js** (via Static Resource).
-
-| | Leaflet | Google Maps |
-|---|---|---|
-| Custo / API key | Grátis, sem chave | Exige chave + billing |
-| Empacotamento | Static Resource offline, sem domínio externo de JS (CSP amigável) | Script externo (Trusted Site + risco de bloqueio CSP) |
-| Plugins | markercluster e heatmap open source | Nativos, porém atrelados ao billing |
-| Qualidade de tiles/geocoding | OpenStreetMap (bom, comunidade) | Superior em POIs e geocoding |
-
-**Para trocar por Google Maps**: substitua o carregamento em `oppMap.js` (`loadScript` do resource) pelo script `maps.googleapis.com` (registre CSP Trusted Site), troque `L.map/L.marker` por `google.maps.Map/AdvancedMarkerElement` e use `MarkerClusterer` do `@googlemaps/markerclusterer`. O restante (painel, controller, selector) não muda — o contrato é só a lista de markers.
-
-## Geocodificação assíncrona
-
-Contas sem `BillingLatitude/Longitude` são geocodificadas em background (`Queueable` + callout ao Nominatim via Named Credential `Nominatim`), com **cache de 90 dias** em `Geocode_Cache_Timestamp__c` — inclusive para endereços que falharam, evitando repetir chamadas. Máximo de 20 callouts por execução, com encadeamento automático do restante.
-
-## Instalação em Scratch Org
+## Como rodar
 
 ```bash
 sf org login web --alias devhub --set-default-dev-hub
 sf org create scratch --definition-file config/project-scratch-def.json --alias map-scratch --set-default
 sf project deploy start
 sf org assign permset --name Opp_Map_User
-sf apex run --file scripts/apex/setup-map-demo.apex   # contas em 3 continentes + opps com Tag__c
+sf apex run --file scripts/apex/setup-map-demo.apex   # contas em 3 continentes e oportunidades com Tag__c
 ```
 
-Depois, adicione o componente **Opportunity Map Container** a uma App Page no Lightning App Builder.
+Depois, adicione o componente **Opportunity Map Container** a uma App Page no Lightning App Builder. Em uma Developer Edition, pule a criação da scratch org e use `-o <sua-org>` nos comandos.
 
-> Em org Developer Edition: pule a criação da scratch e use `-o sua-org` nos comandos.
+## Por onde começar a ler o código
 
-## Testes
+| Arquivo                                                        | O que observar                                              |
+| -------------------------------------------------------------- | ----------------------------------------------------------- |
+| `force-app/main/default/classes/OpportunityMapSelector.cls`    | Montagem do SOQL dinâmico com bind, whitelist e `USER_MODE` |
+| `force-app/main/default/classes/OpportunityFieldDiscovery.cls` | Descoberta de multipicklists via `Schema.describe`          |
+| `force-app/main/default/classes/AccountGeocodingQueue.cls`     | Callout em `Queueable`, cache de 90 dias e encadeamento     |
+| `force-app/main/default/classes/OpportunityTeamSelector.cls`   | Degradação segura quando Opportunity Teams está desligado   |
+| `force-app/main/default/lwc/oppMapContainer/`                  | Estado, cache por filtro e exportação CSV                   |
 
-- **Apex** (33 testes, 100%): construção do SOQL com todas as combinações de filtro, whitelist anti-injection, descoberta de multipicklist, geocoding com `HttpCalloutMock` (sucesso, vazio, erro HTTP, cache), cor por idade, painel de equipe (com e sem Opportunity Teams habilitado), visualizações salvas (CRUD).
-- **Jest** (6 testes): renderização condicional dos filtros dinâmicos a partir do wire mockado, debounce + payload do `filterchange`, cache client-side por combinação de filtro, estados de erro.
+## Limitações e próximos passos
 
-```bash
-npm install --legacy-peer-deps
-npm run test:unit
-sf apex run test --tests OpportunityMapSelectorTest --tests OppMapControllerAndDiscoveryTest --tests AccountGeocodingQueueTest --code-coverage --wait 20
-```
-
-## Performance
-
-- Limite de 10.000 marcadores por consulta (com aviso "refine seus filtros" + flag `truncated`); clustering com `chunkedLoading` no Leaflet para não travar o navegador ao inserir milhares de marcadores de uma vez. Testado com ~1.700 oportunidades geolocalizadas via carga em massa (Bulk API): consulta única, 70-200ms.
-- Cache client-side por combinação de filtros na sessão (repetir um filtro não refaz a query).
-- Clustering de marcadores (Leaflet.markercluster) para alta densidade.
-- Debounce de 400 ms no painel — nada de query por clique.
-
-## Demonstração
-
-Demo ao vivo (dados fictícios, roda 100% no navegador) em [salesforce.flupdigital.com.br/#demo-map](https://salesforce.flupdigital.com.br/#demo-map).
+- Geocodificação limitada a 20 callouts por execução. Carteiras grandes levam várias execuções encadeadas até ficarem completas no mapa.
+- Os tiles e o geocoding dependem de serviços públicos do OpenStreetMap, sem SLA.
 
 ## Licença
 
-MIT — Leaflet (BSD-2), Leaflet.markercluster (MIT), leaflet-heat (MIT), tiles © OpenStreetMap contributors.
+MIT. Leaflet (BSD-2), Leaflet.markercluster (MIT), leaflet-heat (MIT), tiles © OpenStreetMap contributors.
