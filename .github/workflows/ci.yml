@@ -1,11 +1,13 @@
 name: CI
 
 on:
-  pull_request:
+  push:
     branches: [main]
+  pull_request:
 
 jobs:
   jest:
+    name: Testes LWC (Jest)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,20 +17,42 @@ jobs:
       - run: npm install --legacy-peer-deps
       - run: npm run test:unit
 
-  validate:
+  code-analyzer:
+    name: Análise estática (Salesforce Code Analyzer)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm install -g @salesforce/cli
+      - run: sf plugins install code-analyzer
+      # Barra violações de severidade crítica (1). As demais ficam no relatório para revisão.
+      - run: sf code-analyzer run --workspace force-app --rule-selector pmd:Recommended --severity-threshold 1 --output-file code-analyzer.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: code-analyzer
+          path: code-analyzer.html
 
-      - name: Install Salesforce CLI
-        run: npm install -g @salesforce/cli
-
-      - name: Authenticate org
-        # Requires the SFDX_AUTH_URL secret (sf org display --verbose > auth url)
+  apex:
+    name: Deploy de validação e testes Apex
+    # Exige uma org de CI: crie a variável APEX_CI_ENABLED=true e o segredo SFDX_AUTH_URL no repositório.
+    if: vars.APEX_CI_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g @salesforce/cli
+      - name: Autenticar org de CI
         run: |
           echo "${{ secrets.SFDX_AUTH_URL }}" > auth-url.txt
           sf org login sfdx-url --sfdx-url-file auth-url.txt --alias ci-org --set-default
           rm auth-url.txt
-
-      - name: Validate deploy and run local tests
-        run: sf project deploy validate --source-dir force-app --test-level RunLocalTests --target-org ci-org
+      - run: sf project deploy validate --source-dir force-app --test-level RunLocalTests --target-org ci-org --wait 30
